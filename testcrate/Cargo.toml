@@ -1,0 +1,14 @@
+[package]
+name = "testcrate"
+version = "0.1.0"
+authors = ["Aleksandr Orlenko <zxteam@protonmail.com>"]
+
+[features]
+default = ["lua53"]
+lua54 = []
+lua53 = []
+lua52 = []
+lua51 = []
+
+[build-dependencies]
+lua-src = { path = ".." }
