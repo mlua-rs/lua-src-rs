@@ -1,0 +1,141 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        thing:
+        - stable
+        - macos-x86_64
+        - i686-linux
+        - arm-linux
+        - x86_64-mingw
+        - x86_64-msvc
+        include:
+        - thing: stable
+          target: x86_64-unknown-linux-gnu
+          rust: stable
+          os: ubuntu-latest
+        - thing: macos-x86_64
+          target: x86_64-apple-darwin
+          rust: stable
+          os: macos-latest
+        - thing: i686-linux
+          target: i686-unknown-linux-gnu
+          rust: stable
+          os: ubuntu-latest
+        - thing: arm-linux
+          target: arm-unknown-linux-gnueabi
+          rust: stable
+          os: ubuntu-latest
+        - thing: x86_64-mingw
+          target: x86_64-pc-windows-gnu
+          rust: stable
+          os: ubuntu-latest
+        - thing: x86_64-msvc
+          target: x86_64-pc-windows-msvc
+          rust: stable-x86_64-msvc
+          os: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Rust (rustup)
+      if: matrix.os != 'macos-latest'
+      run: rustup update ${{ matrix.rust }} --no-self-update && rustup default ${{ matrix.rust }}
+      shell: bash
+    - name: Install Rust (macos)
+      if: matrix.os == 'macos-latest'
+      run: |
+        curl https://sh.rustup.rs | sh -s -- -y
+        echo ::add-path::$HOME/.cargo/bin
+      shell: bash
+    - name: Install GCC (i686-linux)
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends gcc-multilib
+      if: matrix.thing == 'i686-linux'
+      shell: bash
+    - name: Install GCC (arm-linux)
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends gcc-arm-linux-gnueabi libc6-dev-armel-cross
+      if: matrix.thing == 'arm-linux'
+      shell: bash
+    - name: Install GCC (x86_64-mingw)
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends gcc-mingw-w64-x86-64
+      if: matrix.thing == 'x86_64-mingw'
+      shell: bash
+    - run: rustup target add ${{ matrix.target }}
+    - name: Build
+      run: |
+        for FEATURE in lua51 lua52 lua53 lua54; do
+          echo "Building $FEATURE"
+          cargo build --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release --no-default-features --features $FEATURE
+        done
+      shell: bash
+
+  test_linux:
+    name: Test on Linux
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Rust
+      run: rustup update stable --no-self-update && rustup default stable
+      shell: bash
+    - name: Run tests
+      run: |
+        for FEATURE in lua51 lua52 lua53 lua54; do
+          echo "Testing $FEATURE"
+          cargo test --manifest-path testcrate/Cargo.toml --release --no-default-features --features $FEATURE
+        done
+      shell: bash
+
+  test_macos:
+    name: Test on MacOS
+    runs-on: macos-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Rust
+      run: |
+        curl https://sh.rustup.rs | sh -s -- -y
+        echo ::add-path::$HOME/.cargo/bin
+      shell: bash
+    - name: Run tests
+      run: |
+        for FEATURE in lua51 lua52 lua53 lua54; do
+          echo "Testing $FEATURE"
+          cargo test --manifest-path testcrate/Cargo.toml --release --no-default-features --features $FEATURE
+        done
+      shell: bash
+
+  test_windows:
+    name: Test on Windows
+    runs-on: windows-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Rust
+      run: rustup update stable --no-self-update && rustup default stable
+      shell: bash
+    - name: Run tests
+      run: |
+        for FEATURE in lua51 lua52 lua53 lua54; do
+          echo "Testing $FEATURE"
+          cargo test --manifest-path testcrate/Cargo.toml --release --no-default-features --features $FEATURE
+        done
+      shell: bash
+
+  rustfmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install Rust
+      run: rustup update stable && rustup default stable && rustup component add rustfmt
+    - run: cargo fmt -- --check
