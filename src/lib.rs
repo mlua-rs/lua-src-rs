@@ -89,7 +89,7 @@ impl Build {
                 config.define("LUA_USE_MACOSX", None);
             }
             _ if target.contains("emscripten") => {}
-            _ if target.contains("windows-gnu") => {
+            _ if target.contains("windows") => {
                 config.define("LUA_USE_WINDOWS", None);
             }
             _ => panic!("don't know how to build Lua for {}", target),
