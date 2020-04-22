@@ -58,7 +58,7 @@ impl Build {
             Lua51 => source_dir_base.join("lua-5.1.5"),
             Lua52 => source_dir_base.join("lua-5.2.4"),
             Lua53 => source_dir_base.join("lua-5.3.5"),
-            Lua54 => source_dir_base.join("lua-5.4.0-beta"),
+            Lua54 => source_dir_base.join("lua-5.4.0"),
         };
 
         if lib_dir.exists() {
