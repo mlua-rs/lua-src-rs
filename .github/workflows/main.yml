@@ -7,135 +7,94 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        thing:
-        - stable
-        - macos-x86_64
-        - i686-linux
-        - arm-linux
-        - x86_64-mingw
-        - x86_64-msvc
+        target:
+        - x86_64-unknown-linux-gnu
+        - i686-unknown-linux-gnu
+        - x86_64-pc-windows-gnu
+        - arm-unknown-linux-gnueabi
+        - x86_64-apple-darwin
+        - x86_64-pc-windows-msvc
+        rust: [stable]
+        lua: [lua54, lua53, lua52, lua51]
         include:
-        - thing: stable
-          target: x86_64-unknown-linux-gnu
-          rust: stable
-          os: ubuntu-latest
-        - thing: macos-x86_64
-          target: x86_64-apple-darwin
-          rust: stable
+        - target: x86_64-unknown-linux-gnu
+          os: ubuntu-18.04
+        - target: i686-unknown-linux-gnu
+          os: ubuntu-18.04
+        - target: x86_64-pc-windows-gnu
+          os: ubuntu-18.04
+        - target: arm-unknown-linux-gnueabi
+          os: ubuntu-18.04
+        - target: x86_64-apple-darwin
           os: macos-latest
-        - thing: i686-linux
-          target: i686-unknown-linux-gnu
-          rust: stable
-          os: ubuntu-latest
-        - thing: arm-linux
-          target: arm-unknown-linux-gnueabi
-          rust: stable
-          os: ubuntu-latest
-        - thing: x86_64-mingw
-          target: x86_64-pc-windows-gnu
-          rust: stable
-          os: ubuntu-latest
-        - thing: x86_64-msvc
-          target: x86_64-pc-windows-msvc
-          rust: stable-x86_64-msvc
+        - target: x86_64-pc-windows-msvc
           os: windows-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Install Rust (rustup)
-      if: matrix.os != 'macos-latest'
-      run: rustup update ${{ matrix.rust }} --no-self-update && rustup default ${{ matrix.rust }}
-      shell: bash
-    - name: Install Rust (macos)
-      if: matrix.os == 'macos-latest'
-      run: |
-        curl https://sh.rustup.rs | sh -s -- -y
-        echo ::add-path::$HOME/.cargo/bin
-      shell: bash
-    - name: Install GCC (i686-linux)
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        target: ${{ matrix.target }}
+        override: false
+    - name: Install GCC (i686-unknown-linux-gnu)
+      if: ${{ matrix.target == 'i686-unknown-linux-gnu' }}
       run: |
         sudo apt-get update -y
         sudo apt-get install -y --no-install-recommends gcc-multilib
-      if: matrix.thing == 'i686-linux'
       shell: bash
-    - name: Install GCC (arm-linux)
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y --no-install-recommends gcc-arm-linux-gnueabi libc6-dev-armel-cross
-      if: matrix.thing == 'arm-linux'
-      shell: bash
-    - name: Install GCC (x86_64-mingw)
+    - name: Install GCC (x86_64-pc-windows-gnu)
+      if: ${{ matrix.target == 'x86_64-pc-windows-gnu' }}
       run: |
         sudo apt-get update -y
         sudo apt-get install -y --no-install-recommends gcc-mingw-w64-x86-64
-      if: matrix.thing == 'x86_64-mingw'
       shell: bash
-    - run: rustup target add ${{ matrix.target }}
-    - name: Build
+    - name: Install GCC (arm-unknown-linux-gnueabi)
+      if: ${{ matrix.target == 'arm-unknown-linux-gnueabi' }}
       run: |
-        for FEATURE in lua51 lua52 lua53 lua54; do
-          echo "Building $FEATURE"
-          cargo build --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release --no-default-features --features $FEATURE
-        done
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends gcc-arm-linux-gnueabi libc6-dev-armel-cross
+      shell: bash
+    - name: Build ${{ matrix.lua }}
+      run: |
+        cargo build --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release --no-default-features --features ${{ matrix.lua }}
       shell: bash
 
-  test_linux:
-    name: Test on Linux
-    runs-on: ubuntu-latest
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
     needs: build
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, macos-latest, windows-latest]
+        rust: [stable]
+        lua: [lua54, lua53, lua52, lua51]
+        include:
+        - os: ubuntu-18.04
+          target: x86_64-unknown-linux-gnu
+        - os: macos-latest
+          target: x86_64-apple-darwin
+        - os: windows-latest
+          target: x86_64-pc-windows-msvc
     steps:
-    - uses: actions/checkout@v1
-    - name: Install Rust
-      run: rustup update stable --no-self-update && rustup default stable
-      shell: bash
-    - name: Run tests
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        target: ${{ matrix.target }}
+        override: true
+    - name: Run ${{ matrix.lua }} tests
       run: |
-        for FEATURE in lua51 lua52 lua53 lua54; do
-          echo "Testing $FEATURE"
-          cargo test --manifest-path testcrate/Cargo.toml --release --no-default-features --features $FEATURE
-        done
-      shell: bash
-
-  test_macos:
-    name: Test on MacOS
-    runs-on: macos-latest
-    needs: build
-    steps:
-    - uses: actions/checkout@v1
-    - name: Install Rust
-      run: |
-        curl https://sh.rustup.rs | sh -s -- -y
-        echo ::add-path::$HOME/.cargo/bin
-      shell: bash
-    - name: Run tests
-      run: |
-        for FEATURE in lua51 lua52 lua53 lua54; do
-          echo "Testing $FEATURE"
-          cargo test --manifest-path testcrate/Cargo.toml --release --no-default-features --features $FEATURE
-        done
-      shell: bash
-
-  test_windows:
-    name: Test on Windows
-    runs-on: windows-latest
-    needs: build
-    steps:
-    - uses: actions/checkout@v1
-    - name: Install Rust
-      run: rustup update stable --no-self-update && rustup default stable
-      shell: bash
-    - name: Run tests
-      run: |
-        for FEATURE in lua51 lua52 lua53 lua54; do
-          echo "Testing $FEATURE"
-          cargo test --manifest-path testcrate/Cargo.toml --release --no-default-features --features $FEATURE
-        done
+        cargo test --manifest-path testcrate/Cargo.toml --release --no-default-features --features ${{ matrix.lua }}
       shell: bash
 
   rustfmt:
     name: Rustfmt
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v1
-    - name: Install Rust
-      run: rustup update stable && rustup default stable && rustup component add rustfmt
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt
+        override: true
     - run: cargo fmt -- --check
