@@ -15,4 +15,4 @@ Sources of Lua 5.1/5.2/5.3/5.4(rc3) and logic to build them.
 members = ["testcrate"]
 
 [dependencies]
-cc = "1.0"
+cc = "1.0.54"
