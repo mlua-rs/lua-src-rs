@@ -76,7 +76,8 @@ impl Build {
             .target(target)
             .host(host)
             .warnings(false)
-            .opt_level(2);
+            .opt_level(2)
+            .cargo_metadata(false);
 
         match target {
             _ if target.contains("linux") => {
