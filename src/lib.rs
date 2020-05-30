@@ -23,6 +23,7 @@ pub struct Artifacts {
 }
 
 impl Build {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Build {
         Build {
             out_dir: env::var_os("OUT_DIR").map(|s| PathBuf::from(s).join("lua-build")),
@@ -178,8 +179,8 @@ impl Build {
         }
 
         Artifacts {
-            lib_dir: lib_dir,
-            include_dir: include_dir,
+            lib_dir,
+            include_dir,
             libs: vec![lib_name.to_string()],
         }
     }
