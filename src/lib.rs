@@ -86,10 +86,13 @@ impl Build {
                 config.define("LUA_USE_LINUX", None);
             }
             _ if target.contains("apple-darwin") => {
-                config.define("LUA_USE_MACOSX", None);
+                match version {
+                    Lua51 => config.define("LUA_USE_LINUX", None),
+                    _ => config.define("LUA_USE_MACOSX", None),
+                };
             }
-            _ if target.contains("emscripten") => {}
             _ if target.contains("windows") => {
+                // Defined in Lua >= 5.3
                 config.define("LUA_USE_WINDOWS", None);
             }
             _ => panic!("don't know how to build Lua for {}", target),
@@ -108,7 +111,8 @@ impl Build {
 
         config
             .include(&source_dir)
-            .flag("-w")
+            .flag("-w") // Suppress all warnings
+            .flag_if_supported("-fno-common") // Compile common globals like normal definitions
             .file(source_dir.join("lapi.c"))
             .file(source_dir.join("lauxlib.c"))
             .file(source_dir.join("lbaselib.c"))
