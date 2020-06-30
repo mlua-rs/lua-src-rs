@@ -1,6 +1,6 @@
 [package]
 name = "lua-src"
-version = "535.0.4+540rc4"
+version = "540.0.0"
 authors = ["Aleksandr Orlenko <zxteam@protonmail.com>"]
 edition = "2018"
 repository = "https://github.com/khvzak/lua-src-rs"
@@ -8,7 +8,7 @@ keywords = ["lua", "lua51", "lua52", "lua53", "lua54"]
 readme = "README.md"
 license = "MIT"
 description = """
-Sources of Lua 5.1/5.2/5.3/5.4(rc4) and logic to build them.
+Sources of Lua 5.1/5.2/5.3/5.4 and logic to build them.
 """
 
 [workspace]
