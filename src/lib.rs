@@ -161,8 +161,7 @@ impl Build {
         match version {
             Lua51 => {}
             Lua51Coco => {
-                config
-                    .file(source_dir.join("lcoco.c"));
+                config.file(source_dir.join("lcoco.c"));
             }
             Lua52 => {
                 config
@@ -188,7 +187,10 @@ impl Build {
         config.out_dir(&lib_dir).compile(lib_name);
 
         let headers = ["lauxlib.h", "lua.h", "luaconf.h", "lualib.h", "lcoco.h"];
-        for f in match version { Lua51Coco => &headers, _ => &headers[..4] } {
+        for f in match version {
+            Lua51Coco => &headers,
+            _ => &headers[..4],
+        } {
             fs::copy(source_dir.join(f), include_dir.join(f)).unwrap();
         }
 
