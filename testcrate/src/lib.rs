@@ -10,7 +10,7 @@ extern "C" {
     pub fn lua_getglobal(state: *mut c_void, k: *const c_char);
 }
 
-#[cfg(feature = "lua51")]
+#[cfg(any(feature = "lua51", feature = "lua51Coco"))]
 pub unsafe fn lua_getglobal(state: *mut c_void, k: *const c_char) {
     lua_getfield(state, -10002 /* LUA_GLOBALSINDEX */, k);
 }
@@ -31,7 +31,7 @@ fn lua_works() {
             slice::from_raw_parts(version_ptr as *const u8, len as usize)
         };
 
-        #[cfg(feature = "lua51")]
+        #[cfg(any(feature = "lua51", feature = "lua51Coco"))]
         assert_eq!(version, "Lua 5.1".as_bytes());
         #[cfg(feature = "lua52")]
         assert_eq!(version, "Lua 5.2".as_bytes());

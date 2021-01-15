@@ -3,6 +3,8 @@ fn main() {
 
     #[cfg(feature = "lua51")]
     let version = lua_src::Lua51;
+    #[cfg(feature = "lua51Coco")]
+    let version = lua_src::Lua51Coco;
     #[cfg(feature = "lua52")]
     let version = lua_src::Lua52;
     #[cfg(feature = "lua53")]

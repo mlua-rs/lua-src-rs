@@ -9,6 +9,7 @@ lua54 = []
 lua53 = []
 lua52 = []
 lua51 = []
+lua51Coco = []
 
 [build-dependencies]
 lua-src = { path = ".." }
