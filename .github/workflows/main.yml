@@ -15,7 +15,7 @@ jobs:
         - x86_64-apple-darwin
         - x86_64-pc-windows-msvc
         rust: [stable]
-        lua: [lua54, lua53, lua52, lua51]
+        lua: [lua54, lua53, lua52, lua51, lua51Coco]
         include:
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-18.04
@@ -67,7 +67,7 @@ jobs:
       matrix:
         os: [ubuntu-18.04, macos-latest, windows-latest]
         rust: [stable]
-        lua: [lua54, lua53, lua52, lua51]
+        lua: [lua54, lua53, lua52, lua51, lua51Coco]
         include:
         - os: ubuntu-18.04
           target: x86_64-unknown-linux-gnu
