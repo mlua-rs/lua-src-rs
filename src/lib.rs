@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 pub enum Version {
     Lua51,
+    Lua51Coco,
     Lua52,
     Lua53,
     Lua54,
@@ -57,6 +58,7 @@ impl Build {
         let source_dir_base = Path::new(env!("CARGO_MANIFEST_DIR"));
         let source_dir = match version {
             Lua51 => source_dir_base.join("lua-5.1.5"),
+            Lua51Coco => source_dir_base.join("lua-5.1.5-coco"),
             Lua52 => source_dir_base.join("lua-5.2.4"),
             Lua53 => source_dir_base.join("lua-5.3.6"),
             Lua54 => source_dir_base.join("lua-5.4.2"),
@@ -111,7 +113,7 @@ impl Build {
         }
 
         let lib_name = match version {
-            Lua51 => "lua5.1",
+            Lua51 | Lua51Coco => "lua5.1",
             Lua52 => "lua5.2",
             Lua53 => "lua5.3",
             Lua54 => "lua5.4",
@@ -125,6 +127,7 @@ impl Build {
             .file(source_dir.join("lauxlib.c"))
             .file(source_dir.join("lbaselib.c"))
             // skipped: lbitlib.c (>= 5.2, <= 5.3)
+            // skipped: lcoco.c (Coco only)
             .file(source_dir.join("lcode.c"))
             // skipped: lcorolib.c (>= 5.2)
             // skipped: lctype.c (>= 5.2)
@@ -157,6 +160,10 @@ impl Build {
 
         match version {
             Lua51 => {}
+            Lua51Coco => {
+                config
+                    .file(source_dir.join("lcoco.c"));
+            }
             Lua52 => {
                 config
                     .file(source_dir.join("lbitlib.c"))
@@ -180,7 +187,8 @@ impl Build {
 
         config.out_dir(&lib_dir).compile(lib_name);
 
-        for f in &["lauxlib.h", "lua.h", "luaconf.h", "lualib.h"] {
+        let headers = ["lauxlib.h", "lua.h", "luaconf.h", "lualib.h", "lcoco.h"];
+        for f in match version { Lua51Coco => &headers, _ => &headers[..4] } {
             fs::copy(source_dir.join(f), include_dir.join(f)).unwrap();
         }
 
