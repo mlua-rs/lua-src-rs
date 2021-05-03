@@ -110,6 +110,10 @@ impl Build {
             config.define("LUA_COMPAT_5_3", None);
         }
 
+        if cfg!(debug_assertions) {
+            config.define("LUA_USE_APICHECK", None);
+        }
+
         let lib_name = match version {
             Lua51 => "lua5.1",
             Lua52 => "lua5.2",
