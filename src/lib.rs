@@ -7,6 +7,7 @@ pub enum Version {
     Lua52,
     Lua53,
     Lua54,
+    LuaFactorio52,
 }
 pub use self::Version::*;
 
@@ -60,6 +61,7 @@ impl Build {
             Lua52 => source_dir_base.join("lua-5.2.4"),
             Lua53 => source_dir_base.join("lua-5.3.6"),
             Lua54 => source_dir_base.join("lua-5.4.3"),
+            LuaFactorio52 => source_dir_base.join("lua-factorio-5.2.1/src"),
         };
 
         if lib_dir.exists() {
@@ -116,10 +118,15 @@ impl Build {
 
         let lib_name = match version {
             Lua51 => "lua5.1",
-            Lua52 => "lua5.2",
+            Lua52 | LuaFactorio52 => "lua5.2",
             Lua53 => "lua5.3",
             Lua54 => "lua5.4",
         };
+
+        if let LuaFactorio52 = version {
+            config.cpp(true);
+            config.define("USE_LUA_PACKAGE", None);
+        }
 
         config
             .include(&source_dir)
@@ -161,7 +168,7 @@ impl Build {
 
         match version {
             Lua51 => {}
-            Lua52 => {
+            Lua52 | LuaFactorio52 => {
                 config
                     .file(source_dir.join("lbitlib.c"))
                     .file(source_dir.join("lcorolib.c"))
