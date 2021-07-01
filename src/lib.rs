@@ -128,7 +128,7 @@ impl Build {
                 .cpp(true)
                 .define("USE_LUA_PACKAGE", None)
                 //.cpp_set_stdlib("c++");
-                .cpp_link_stdlib("stdc++");
+                .cpp_link_stdlib("c++");
         }
 
         config
