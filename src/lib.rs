@@ -168,7 +168,13 @@ impl Build {
 
         match version {
             Lua51 => {}
-            Lua52 | LuaFactorio52 => {
+            Lua52 => {
+                config
+                    .file(source_dir.join("lbitlib.c"))
+                    .file(source_dir.join("lcorolib.c"))
+                    .file(source_dir.join("lctype.c"));
+            }
+            LuaFactorio52 => {
                 config
                     .file(source_dir.join("lbitlib.c"))
                     .file(source_dir.join("lcorolib.c"))
@@ -193,6 +199,10 @@ impl Build {
 
         for f in &["lauxlib.h", "lua.h", "luaconf.h", "lualib.h"] {
             fs::copy(source_dir.join(f), include_dir.join(f)).unwrap();
+        }
+
+        if let LuaFactorio52 = version {
+            fs::copy(source_dir.join("lua.hpp"), include_dir.join("lua.hpp")).unwrap();
         }
 
         Artifacts {
