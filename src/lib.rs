@@ -124,8 +124,9 @@ impl Build {
         };
 
         if let LuaFactorio52 = version {
-            config.cpp(true);
-            config.define("USE_LUA_PACKAGE", None);
+            config.cpp(true)
+                .define("USE_LUA_PACKAGE", None)
+                .cpp_set_stdlib("c++");
         }
 
         config
