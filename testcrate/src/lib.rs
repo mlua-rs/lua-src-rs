@@ -47,7 +47,7 @@ fn lua_works() {
 fn unicode_identifiers() {
     unsafe {
         let state = luaL_newstate();
-        let code = "local 😀 = 0\n";
+        let code = "local 😀 = 0\0";
         let ret = luaL_loadstring(state, code.as_ptr().cast());
         #[cfg(feature = "lua54")]
         assert_eq!(0, ret);
