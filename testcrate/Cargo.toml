@@ -10,5 +10,6 @@ lua53 = []
 lua52 = []
 lua51 = []
 
-[build-dependencies]
-lua-src = { path = ".." }
+[build-dependencies.lua-src]
+path = ".."
+features = ["ucid"]

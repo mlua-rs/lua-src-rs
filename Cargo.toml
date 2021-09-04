@@ -11,6 +11,9 @@ description = """
 Sources of Lua 5.1/5.2/5.3/5.4 and logic to build them.
 """
 
+[features]
+ucid = [] # accept UniCode IDentifiers
+
 [workspace]
 members = ["testcrate"]
 
