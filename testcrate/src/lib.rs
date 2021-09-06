@@ -5,6 +5,7 @@ extern "C" {
     pub fn luaL_openlibs(state: *mut c_void);
     pub fn lua_getfield(state: *mut c_void, index: c_int, k: *const c_char);
     pub fn lua_tolstring(state: *mut c_void, index: c_int, len: *mut c_long) -> *const c_char;
+    pub fn luaL_loadstring(state: *mut c_void, s: *const c_char) -> c_int;
 
     #[cfg(any(feature = "lua52", feature = "lua53", feature = "lua54"))]
     pub fn lua_getglobal(state: *mut c_void, k: *const c_char);
@@ -39,5 +40,18 @@ fn lua_works() {
         assert_eq!(version, "Lua 5.3".as_bytes());
         #[cfg(feature = "lua54")]
         assert_eq!(version, "Lua 5.4".as_bytes());
+    }
+}
+
+#[test]
+fn unicode_identifiers() {
+    unsafe {
+        let state = luaL_newstate();
+        let code = "local 😀 = 0\0";
+        let ret = luaL_loadstring(state, code.as_ptr().cast());
+        #[cfg(feature = "lua54")]
+        assert_eq!(0, ret);
+        #[cfg(not(feature = "lua54"))]
+        assert_ne!(0, ret);
     }
 }
