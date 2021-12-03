@@ -110,6 +110,8 @@ impl Build {
 
         if let Lua54 = version {
             config.define("LUA_COMPAT_5_3", None);
+            #[cfg(feature = "ucid")]
+            config.define("LUA_UCID", None);
         }
 
         if cfg!(debug_assertions) {
