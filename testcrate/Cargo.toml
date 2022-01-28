@@ -7,6 +7,7 @@ authors = ["Aleksandr Orlenko <zxteam@protonmail.com>"]
 default = ["lua53"]
 lua54 = []
 lua53 = []
+luaeris53 = []
 lua52 = []
 lua51 = []
 

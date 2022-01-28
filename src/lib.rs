@@ -7,6 +7,7 @@ pub enum Version {
     Lua52,
     Lua53,
     Lua54,
+    LuaEris53,
 }
 pub use self::Version::*;
 
@@ -60,6 +61,7 @@ impl Build {
             Lua52 => source_dir_base.join("lua-5.2.4"),
             Lua53 => source_dir_base.join("lua-5.3.6"),
             Lua54 => source_dir_base.join("lua-5.4.4"),
+            LuaEris53 => source_dir_base.join("lua-eris-5.3.5"),
         };
 
         if lib_dir.exists() {
@@ -121,6 +123,7 @@ impl Build {
             Lua52 => "lua5.2",
             Lua53 => "lua5.3",
             Lua54 => "lua5.4",
+            LuaEris53 => "luaeris5.3",
         };
 
         config
@@ -176,6 +179,14 @@ impl Build {
                     .file(source_dir.join("lctype.c"))
                     .file(source_dir.join("lutf8lib.c"));
             }
+            LuaEris53 => {
+                config
+                    .file(source_dir.join("lbitlib.c"))
+                    .file(source_dir.join("lcorolib.c"))
+                    .file(source_dir.join("lctype.c"))
+                    .file(source_dir.join("lutf8lib.c"))
+                    .file(source_dir.join("eris.c"));
+            }
             Lua54 => {
                 config
                     .file(source_dir.join("lcorolib.c"))
@@ -186,7 +197,12 @@ impl Build {
 
         config.out_dir(&lib_dir).compile(lib_name);
 
-        for f in &["lauxlib.h", "lua.h", "luaconf.h", "lualib.h"] {
+        let top_includes = match version {
+            LuaEris53 => ["lauxlib.h", "lua.h", "luaconf.h", "lualib.h", "eris.h"].as_slice(),
+            _ => ["lauxlib.h", "lua.h", "luaconf.h", "lualib.h"].as_slice(),
+        };
+
+        for f in top_includes {
             fs::copy(source_dir.join(f), include_dir.join(f)).unwrap();
         }
 
