@@ -60,7 +60,7 @@ impl Build {
             Lua51 => source_dir_base.join("lua-5.1.5"),
             Lua52 => source_dir_base.join("lua-5.2.4"),
             Lua53 => source_dir_base.join("lua-5.3.6"),
-            Lua54 => source_dir_base.join("lua-5.4.3"),
+            Lua54 => source_dir_base.join("lua-5.4.4"),
             LuaFactorio52 => source_dir_base.join("lua-factorio-5.2.1/src"),
         };
 
