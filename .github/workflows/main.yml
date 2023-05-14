@@ -14,28 +14,25 @@ jobs:
         - arm-unknown-linux-gnueabi
         - x86_64-apple-darwin
         - x86_64-pc-windows-msvc
-        rust: [stable]
         lua: [lua54, lua53, lua52, lua51]
         include:
         - target: x86_64-unknown-linux-gnu
-          os: ubuntu-18.04
+          os: ubuntu-latest
         - target: i686-unknown-linux-gnu
-          os: ubuntu-18.04
+          os: ubuntu-latest
         - target: x86_64-pc-windows-gnu
-          os: ubuntu-18.04
+          os: ubuntu-latest
         - target: arm-unknown-linux-gnueabi
-          os: ubuntu-18.04
+          os: ubuntu-latest
         - target: x86_64-apple-darwin
           os: macos-latest
         - target: x86_64-pc-windows-msvc
           os: windows-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: ${{ matrix.rust }}
         target: ${{ matrix.target }}
-        override: false
     - name: Install GCC (i686-unknown-linux-gnu)
       if: ${{ matrix.target == 'i686-unknown-linux-gnu' }}
       run: |
@@ -65,23 +62,20 @@ jobs:
     needs: build
     strategy:
       matrix:
-        os: [ubuntu-18.04, macos-latest, windows-latest]
-        rust: [stable]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         lua: [lua54, lua53, lua52, lua51]
         include:
-        - os: ubuntu-18.04
+        - os: ubuntu-latest
           target: x86_64-unknown-linux-gnu
         - os: macos-latest
           target: x86_64-apple-darwin
         - os: windows-latest
           target: x86_64-pc-windows-msvc
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: ${{ matrix.rust }}
         target: ${{ matrix.target }}
-        override: true
     - name: Run ${{ matrix.lua }} tests
       run: |
         cargo test --manifest-path testcrate/Cargo.toml --release --no-default-features --features ${{ matrix.lua }}
@@ -89,12 +83,10 @@ jobs:
 
   rustfmt:
     name: Rustfmt
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: stable
         components: rustfmt
-        override: true
     - run: cargo fmt -- --check
