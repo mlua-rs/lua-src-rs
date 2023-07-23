@@ -53,7 +53,7 @@ jobs:
       shell: bash
     - name: Build ${{ matrix.lua }}
       run: |
-        cargo build --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release --no-default-features --features ${{ matrix.lua }}
+        cargo build --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release --features ${{ matrix.lua }}
       shell: bash
 
   test:
@@ -78,7 +78,7 @@ jobs:
         target: ${{ matrix.target }}
     - name: Run ${{ matrix.lua }} tests
       run: |
-        cargo test --manifest-path testcrate/Cargo.toml --release --no-default-features --features ${{ matrix.lua }}
+        cargo test --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }}
       shell: bash
 
   rustfmt:
