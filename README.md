@@ -5,7 +5,9 @@
 [github-actions]: https://github.com/khvzak/lua-src-rs/actions
 
 This crate contains the sources of Lua 5.1/5.2/5.3/5.4 and logic to build them.
-Intended to be consumed by the [mlua](https://crates.io/crates/mlua) crate.
+Intended to be consumed by the [mlua-sys] crate.
+
+[mlua-sys]: https://crates.io/crates/mlua-sys
 
 # License
 
