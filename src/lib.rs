@@ -2,6 +2,7 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum Version {
     Lua51,
     Lua52,
@@ -84,13 +85,7 @@ impl Build {
             _ if target.contains("linux") => {
                 config.define("LUA_USE_LINUX", None);
             }
-            _ if target.contains("freebsd") => {
-                config.define("LUA_USE_LINUX", None);
-            }
-            _ if target.contains("netbsd") => {
-                config.define("LUA_USE_LINUX", None);
-            }
-            _ if target.contains("openbsd") => {
+            _ if target.ends_with("bsd") => {
                 config.define("LUA_USE_LINUX", None);
             }
             _ if target.contains("apple-darwin") => {
