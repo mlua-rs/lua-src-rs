@@ -28,6 +28,8 @@ jobs:
           os: macos-latest
         - target: x86_64-pc-windows-msvc
           os: windows-latest
+        - target: wasm32-unknown-emscripten
+          os: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - uses: dtolnay/rust-toolchain@stable
@@ -51,6 +53,12 @@ jobs:
         sudo apt-get update -y
         sudo apt-get install -y --no-install-recommends gcc-arm-linux-gnueabi libc6-dev-armel-cross
       shell: bash
+    - name: Install emscripten (wasm32-unknown-emscripten)
+      if: ${{ matrix.target == 'wasm32-unknown-emscripten' }}
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends emscripten
+      shell: bash
     - name: Build ${{ matrix.lua }}
       run: |
         cargo build --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release --features ${{ matrix.lua }}
@@ -71,11 +79,21 @@ jobs:
           target: x86_64-apple-darwin
         - os: windows-latest
           target: x86_64-pc-windows-msvc
+        - os: ubuntu-latest
+          target: wasm32-unknown-emscripten
     steps:
     - uses: actions/checkout@v3
     - uses: dtolnay/rust-toolchain@stable
       with:
         target: ${{ matrix.target }}
+    - name: Install emscripten (wasm32-unknown-emscripten)
+      if: ${{ matrix.target == 'wasm32-unknown-emscripten' }}
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends emscripten
+        echo 'CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_RUNNER=node' >> $GITHUB_ENV
+        echo 'RUSTFLAGS="-C link-args=-sERROR_ON_UNDEFINED_SYMBOLS=0"' >> $GITHUB_ENV
+      shell: bash
     - name: Run ${{ matrix.lua }} tests
       run: |
         cargo test --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }}

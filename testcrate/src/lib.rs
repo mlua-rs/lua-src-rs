@@ -7,8 +7,10 @@ extern "C" {
     pub fn lua_tolstring(state: *mut c_void, index: c_int, len: *mut c_long) -> *const c_char;
     pub fn luaL_loadstring(state: *mut c_void, s: *const c_char) -> c_int;
 
-    #[cfg(any(feature = "lua52", feature = "lua53", feature = "lua54"))]
+    #[cfg(feature = "lua52")]
     pub fn lua_getglobal(state: *mut c_void, k: *const c_char);
+    #[cfg(any(feature = "lua53", feature = "lua54"))]
+    pub fn lua_getglobal(state: *mut c_void, k: *const c_char) -> c_int;
 }
 
 #[cfg(feature = "lua51")]
