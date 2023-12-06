@@ -104,6 +104,9 @@ impl Build {
                 // Defined in Lua >= 5.3
                 config.define("LUA_USE_WINDOWS", None);
             }
+            _ if target.contains("emscripten") => {
+                config.define("LUA_USE_POSIX", None);
+            }
             _ => panic!("don't know how to build Lua for {}", target),
         };
 
