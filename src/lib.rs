@@ -56,7 +56,7 @@ impl Build {
         let include_dir = out_dir.join("include");
 
         let source_dir_base = Path::new(env!("CARGO_MANIFEST_DIR"));
-        let source_dir = match version {
+        let mut source_dir = match version {
             Lua51 => source_dir_base.join("lua-5.1.5"),
             Lua52 => source_dir_base.join("lua-5.2.4"),
             Lua53 => source_dir_base.join("lua-5.3.6"),
@@ -103,6 +103,35 @@ impl Build {
             _ if target.contains("windows") => {
                 // Defined in Lua >= 5.3
                 config.define("LUA_USE_WINDOWS", None);
+            }
+            _ if target.ends_with("emscripten") => {
+                config
+                    .define("LUA_USE_POSIX", None)
+                    .cpp(true)
+                    .flag("-fexceptions"); // Enable exceptions to be caught
+
+                let cpp_source_dir = out_dir.join("cpp_source");
+                if cpp_source_dir.exists() {
+                    fs::remove_dir_all(&cpp_source_dir).unwrap();
+                }
+                fs::create_dir_all(&cpp_source_dir).unwrap();
+
+                for file in fs::read_dir(&source_dir).unwrap() {
+                    let file = file.unwrap();
+                    let filename = file.file_name().to_string_lossy().to_string();
+                    let src_file = source_dir.join(file.file_name());
+                    let dst_file = cpp_source_dir.join(file.file_name());
+
+                    let mut content = fs::read(src_file).unwrap();
+                    // ljumptab.h only contains definitions and will cause errors when wrapping with
+                    // 'extern "C"'
+                    if filename.ends_with(".h") && !["ljumptab.h"].contains(&filename.as_str()) {
+                        content.splice(0..0, b"extern \"C\" {\n".to_vec());
+                        content.extend(b"\n}".to_vec())
+                    }
+                    fs::write(dst_file, content).unwrap();
+                }
+                source_dir = cpp_source_dir
             }
             _ => panic!("don't know how to build Lua for {}", target),
         };
