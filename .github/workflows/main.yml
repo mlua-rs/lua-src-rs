@@ -14,6 +14,7 @@ jobs:
         - arm-unknown-linux-gnueabi
         - x86_64-apple-darwin
         - x86_64-pc-windows-msvc
+        - wasm32-unknown-emscripten
         lua: [lua54, lua53, lua52, lua51]
         include:
         - target: x86_64-unknown-linux-gnu
