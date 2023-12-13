@@ -118,14 +118,13 @@ impl Build {
 
                 for file in fs::read_dir(&source_dir).unwrap() {
                     let file = file.unwrap();
-                    let filename = file.file_name().to_string_lossy().to_string();
+                    let filename = file.file_name();
+                    let filename = filename.to_str().unwrap();
                     let src_file = source_dir.join(file.file_name());
                     let dst_file = cpp_source_dir.join(file.file_name());
 
                     let mut content = fs::read(src_file).unwrap();
-                    // ljumptab.h only contains definitions and will cause errors when wrapping with
-                    // 'extern "C"'
-                    if filename.ends_with(".h") && !["ljumptab.h"].contains(&filename.as_str()) {
+                    if ["lauxlib.h", "lua.h", "lualib.h"].contains(&filename) {
                         content.splice(0..0, b"extern \"C\" {\n".to_vec());
                         content.extend(b"\n}".to_vec())
                     }
