@@ -1,9 +1,9 @@
 [package]
 name = "lua-src"
-version = "547.0.0"
+version = "547.1.0"
 authors = ["Aleksandr Orlenko <zxteam@protonmail.com>"]
 edition = "2021"
-repository = "https://github.com/khvzak/lua-src-rs"
+repository = "https://github.com/mlua-rs/lua-src-rs"
 keywords = ["lua", "lua51", "lua52", "lua53", "lua54"]
 readme = "README.md"
 license = "MIT"
