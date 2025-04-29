@@ -10,9 +10,11 @@ jobs:
         target:
         - x86_64-unknown-linux-gnu
         - i686-unknown-linux-gnu
-        - x86_64-pc-windows-gnu
+        - aarch64-unknown-linux-gnu
         - arm-unknown-linux-gnueabi
         - x86_64-apple-darwin
+        - aarch64-apple-darwin
+        - x86_64-pc-windows-gnu
         - x86_64-pc-windows-msvc
         - wasm32-unknown-emscripten
         lua: [lua54, lua53, lua52, lua51]
@@ -21,18 +23,22 @@ jobs:
           os: ubuntu-latest
         - target: i686-unknown-linux-gnu
           os: ubuntu-latest
-        - target: x86_64-pc-windows-gnu
+        - target: aarch64-unknown-linux-gnu
           os: ubuntu-latest
         - target: arm-unknown-linux-gnueabi
           os: ubuntu-latest
         - target: x86_64-apple-darwin
           os: macos-latest
+        - target: aarch64-apple-darwin
+          os: macos-latest
+        - target: x86_64-pc-windows-gnu
+          os: ubuntu-latest
         - target: x86_64-pc-windows-msvc
           os: windows-latest
         - target: wasm32-unknown-emscripten
           os: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@main
     - uses: dtolnay/rust-toolchain@stable
       with:
         target: ${{ matrix.target }}
@@ -42,17 +48,23 @@ jobs:
         sudo apt-get update -y
         sudo apt-get install -y --no-install-recommends gcc-multilib
       shell: bash
-    - name: Install GCC (x86_64-pc-windows-gnu)
-      if: ${{ matrix.target == 'x86_64-pc-windows-gnu' }}
+    - name: Install GCC (aarch64-unknown-linux-gnu)
+      if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
       run: |
         sudo apt-get update -y
-        sudo apt-get install -y --no-install-recommends gcc-mingw-w64-x86-64
+        sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu libc6-dev-arm64-cross
       shell: bash
     - name: Install GCC (arm-unknown-linux-gnueabi)
       if: ${{ matrix.target == 'arm-unknown-linux-gnueabi' }}
       run: |
         sudo apt-get update -y
         sudo apt-get install -y --no-install-recommends gcc-arm-linux-gnueabi libc6-dev-armel-cross
+      shell: bash
+    - name: Install GCC (x86_64-pc-windows-gnu)
+      if: ${{ matrix.target == 'x86_64-pc-windows-gnu' }}
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends gcc-mingw-w64-x86-64
       shell: bash
     - name: Install emscripten (wasm32-unknown-emscripten)
       if: ${{ matrix.target == 'wasm32-unknown-emscripten' }}
@@ -81,7 +93,7 @@ jobs:
         - os: windows-latest
           target: x86_64-pc-windows-msvc
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@main
     - uses: dtolnay/rust-toolchain@stable
       with:
         target: ${{ matrix.target }}
@@ -98,8 +110,8 @@ jobs:
       matrix:
         lua: [lua54, lua53, lua52, lua51]
     steps:
-    - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@nightly
+    - uses: actions/checkout@main
+    - uses: dtolnay/rust-toolchain@stable
       with:
         target: wasm32-unknown-emscripten
     - name: Install emscripten
@@ -117,7 +129,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@main
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt
