@@ -18,4 +18,4 @@ ucid = [] # accept UniCode IDentifiers
 members = ["testcrate"]
 
 [dependencies]
-cc = "1.0.54"
+cc = { version = "1.2", features = ["parallel"] }
