@@ -1,6 +1,6 @@
 [package]
 name = "lua-src"
-version = "547.1.0"
+version = "548.0.0"
 authors = ["Aleksandr Orlenko <zxteam@protonmail.com>"]
 edition = "2021"
 repository = "https://github.com/mlua-rs/lua-src-rs"
