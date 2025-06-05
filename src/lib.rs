@@ -140,7 +140,7 @@ impl Version {
             Lua51 => "lua-5.1.5",
             Lua52 => "lua-5.2.4",
             Lua53 => "lua-5.3.6",
-            Lua54 => "lua-5.4.7",
+            Lua54 => "lua-5.4.8",
         }
     }
 
