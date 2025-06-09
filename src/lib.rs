@@ -17,6 +17,7 @@ pub struct Build {
 }
 
 pub struct Artifacts {
+    include_dir: PathBuf,
     lib_dir: PathBuf,
     libs: Vec<String>,
 }
@@ -50,7 +51,11 @@ impl Build {
         let out_dir = self.out_dir.as_ref().expect("OUT_DIR is not set");
         let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
         let mut source_dir = manifest_dir.join(version.source_dir());
-        let build_dir = out_dir.join("lua-build");
+        let include_dir = out_dir.join("include");
+
+        if !include_dir.exists() {
+            fs::create_dir_all(&include_dir).unwrap();
+        }
 
         let mut config = cc::Build::new();
         config.warnings(false).cargo_metadata(false);
@@ -124,11 +129,16 @@ impl Build {
             .flag("-w") // Suppress all warnings
             .flag_if_supported("-fno-common") // Compile common globals like normal definitions
             .add_files_by_ext(&source_dir, "c")
-            .out_dir(&build_dir)
+            .out_dir(out_dir)
             .compile(version.lib_name());
 
+        for f in &["lauxlib.h", "lua.h", "luaconf.h", "lualib.h"] {
+            fs::copy(source_dir.join(f), include_dir.join(f)).unwrap();
+        }
+
         Artifacts {
-            lib_dir: build_dir,
+            include_dir,
+            lib_dir: out_dir.clone(),
             libs: vec![version.lib_name().to_string()],
         }
     }
@@ -155,6 +165,10 @@ impl Version {
 }
 
 impl Artifacts {
+    pub fn include_dir(&self) -> &Path {
+        &self.include_dir
+    }
+
     pub fn lib_dir(&self) -> &Path {
         &self.lib_dir
     }
