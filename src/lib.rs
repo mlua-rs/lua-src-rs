@@ -1,4 +1,5 @@
 use std::env;
+use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -92,14 +93,25 @@ impl Build {
 
     /// Builds the Lua artifacts for the specified version.
     pub fn build(&self, version: Version) -> Artifacts {
-        let target = &self.target.as_ref().expect("TARGET is not set")[..];
-        let out_dir = self.out_dir.as_ref().expect("OUT_DIR is not set");
+        match self.try_build(version) {
+            Ok(artifacts) => artifacts,
+            Err(err) => panic!("{err}"),
+        }
+    }
+
+    /// Attempts to build the Lua artifacts for the specified version.
+    ///
+    /// Returns an error if the build fails.
+    pub fn try_build(&self, version: Version) -> Result<Artifacts, Box<dyn Error>> {
+        let target = self.target.as_ref().ok_or("TARGET is not set")?;
+        let out_dir = self.out_dir.as_ref().ok_or("OUT_DIR is not set")?;
         let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
         let mut source_dir = manifest_dir.join(version.source_dir());
         let include_dir = out_dir.join("include");
 
         if !include_dir.exists() {
-            fs::create_dir_all(&include_dir).unwrap();
+            fs::create_dir_all(&include_dir)
+                .context(|| format!("Cannot create '{}'", include_dir.display()))?;
         }
 
         let mut config = cc::Build::new();
@@ -148,27 +160,33 @@ impl Build {
 
                 let cpp_source_dir = out_dir.join("cpp_source");
                 if cpp_source_dir.exists() {
-                    fs::remove_dir_all(&cpp_source_dir).unwrap();
+                    fs::remove_dir_all(&cpp_source_dir)
+                        .context(|| format!("Cannot remove '{}'", cpp_source_dir.display()))?;
                 }
-                fs::create_dir_all(&cpp_source_dir).unwrap();
+                fs::create_dir_all(&cpp_source_dir)
+                    .context(|| format!("Cannot create '{}'", cpp_source_dir.display()))?;
 
-                for file in fs::read_dir(&source_dir).unwrap() {
-                    let file = file.unwrap();
+                for file in fs::read_dir(&source_dir)
+                    .context(|| format!("Cannot read '{}'", source_dir.display()))?
+                {
+                    let file = file?;
                     let filename = file.file_name();
-                    let filename = filename.to_str().unwrap();
+                    let filename = &*filename.to_string_lossy();
                     let src_file = source_dir.join(file.file_name());
                     let dst_file = cpp_source_dir.join(file.file_name());
 
-                    let mut content = fs::read(src_file).unwrap();
+                    let mut content = fs::read(&src_file)
+                        .context(|| format!("Cannot read '{}'", src_file.display()))?;
                     if ["lauxlib.h", "lua.h", "lualib.h"].contains(&filename) {
                         content.splice(0..0, b"extern \"C\" {\n".to_vec());
                         content.extend(b"\n}".to_vec())
                     }
-                    fs::write(dst_file, content).unwrap();
+                    fs::write(&dst_file, content)
+                        .context(|| format!("Cannot write to '{}'", dst_file.display()))?;
                 }
                 source_dir = cpp_source_dir
             }
-            _ => panic!("don't know how to build Lua for {target}"),
+            _ => Err(format!("don't know how to build Lua for {target}"))?,
         }
 
         if let Lua54 = version {
@@ -199,19 +217,22 @@ impl Build {
             .include(&source_dir)
             .flag("-w") // Suppress all warnings
             .flag_if_supported("-fno-common") // Compile common globals like normal definitions
-            .add_files_by_ext(&source_dir, "c")
+            .add_files_by_ext(&source_dir, "c")?
             .out_dir(out_dir)
-            .compile(version.lib_name());
+            .try_compile(version.lib_name())?;
 
         for f in &["lauxlib.h", "lua.h", "luaconf.h", "lualib.h"] {
-            fs::copy(source_dir.join(f), include_dir.join(f)).unwrap();
+            let from = source_dir.join(f);
+            let to = include_dir.join(f);
+            fs::copy(&from, &to)
+                .context(|| format!("Cannot copy '{}' to '{}'", from.display(), to.display()))?;
         }
 
-        Artifacts {
+        Ok(Artifacts {
             include_dir,
             lib_dir: out_dir.clone(),
             libs: vec![version.lib_name().to_string()],
-        }
+        })
     }
 }
 
@@ -263,19 +284,29 @@ impl Artifacts {
     }
 }
 
+trait ErrorContext<T> {
+    fn context(self, f: impl FnOnce() -> String) -> Result<T, Box<dyn Error>>;
+}
+
+impl<T, E: Error> ErrorContext<T> for Result<T, E> {
+    fn context(self, f: impl FnOnce() -> String) -> Result<T, Box<dyn Error>> {
+        self.map_err(|e| format!("{}: {e}", f()).into())
+    }
+}
+
 trait AddFilesByExt {
-    fn add_files_by_ext(&mut self, dir: &Path, ext: &str) -> &mut Self;
+    fn add_files_by_ext(&mut self, dir: &Path, ext: &str) -> Result<&mut Self, Box<dyn Error>>;
 }
 
 impl AddFilesByExt for cc::Build {
-    fn add_files_by_ext(&mut self, dir: &Path, ext: &str) -> &mut Self {
+    fn add_files_by_ext(&mut self, dir: &Path, ext: &str) -> Result<&mut Self, Box<dyn Error>> {
         for entry in fs::read_dir(dir)
-            .unwrap()
+            .context(|| format!("Cannot read '{}'", dir.display()))?
             .filter_map(|e| e.ok())
             .filter(|e| e.path().extension() == Some(ext.as_ref()))
         {
             self.file(entry.path());
         }
-        self
+        Ok(self)
     }
 }
