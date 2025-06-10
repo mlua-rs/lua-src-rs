@@ -102,6 +102,29 @@ jobs:
         cargo test --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }}
       shell: bash
 
+  test_standalone:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+        - os: ubuntu-latest
+          target: x86_64-unknown-linux-gnu
+        - os: macos-latest
+          target: x86_64-apple-darwin
+        - os: windows-latest
+          target: x86_64-pc-windows-msvc
+    steps:
+    - uses: actions/checkout@main
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        target: ${{ matrix.target }}
+    - name: Run tests
+      run: |
+        cargo test
+
   test_emscripten:
     name: Test emscripten
     runs-on: ubuntu-latest
