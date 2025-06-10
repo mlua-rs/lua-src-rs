@@ -14,6 +14,9 @@ pub use self::Version::*;
 pub struct Build {
     out_dir: Option<PathBuf>,
     target: Option<String>,
+    host: Option<String>,
+    opt_level: Option<String>,
+    debug: Option<bool>,
 }
 
 pub struct Artifacts {
@@ -27,6 +30,9 @@ impl Default for Build {
         Build {
             out_dir: env::var_os("OUT_DIR").map(PathBuf::from),
             target: env::var("TARGET").ok(),
+            host: None,
+            opt_level: None,
+            debug: None,
         }
     }
 }
@@ -43,6 +49,21 @@ impl Build {
 
     pub fn target(&mut self, target: &str) -> &mut Build {
         self.target = Some(target.to_string());
+        self
+    }
+
+    pub fn host(&mut self, host: &str) -> &mut Build {
+        self.host = Some(host.to_string());
+        self
+    }
+
+    pub fn opt_level(&mut self, opt_level: &str) -> &mut Build {
+        self.opt_level = Some(opt_level.to_string());
+        self
+    }
+
+    pub fn debug(&mut self, debug: bool) -> &mut Build {
+        self.debug = Some(debug);
         self
     }
 
@@ -120,8 +141,17 @@ impl Build {
             config.define("LUA_UCID", None);
         }
 
-        if cfg!(debug_assertions) {
+        if self.debug.unwrap_or(cfg!(debug_assertions)) {
             config.define("LUA_USE_APICHECK", None);
+            config.debug(true);
+        }
+
+        if let Some(host) = &self.host {
+            config.host(host);
+        }
+
+        if let Some(opt_level) = &self.opt_level {
+            config.opt_level_str(opt_level);
         }
 
         config
