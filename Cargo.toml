@@ -19,3 +19,7 @@ members = ["testcrate"]
 
 [dependencies]
 cc = "1.2"
+
+[dev-dependencies]
+target-lexicon = "0.13"
+tempfile = "3.0"

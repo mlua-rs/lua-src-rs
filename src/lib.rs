@@ -19,6 +19,7 @@ pub struct Build {
     debug: Option<bool>,
 }
 
+#[derive(Clone, Debug)]
 pub struct Artifacts {
     include_dir: PathBuf,
     lib_dir: PathBuf,
@@ -67,7 +68,7 @@ impl Build {
         self
     }
 
-    pub fn build(&mut self, version: Version) -> Artifacts {
+    pub fn build(&self, version: Version) -> Artifacts {
         let target = &self.target.as_ref().expect("TARGET is not set")[..];
         let out_dir = self.out_dir.as_ref().expect("OUT_DIR is not set");
         let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -79,7 +80,19 @@ impl Build {
         }
 
         let mut config = cc::Build::new();
-        config.warnings(false).cargo_metadata(false);
+        config.warnings(false).cargo_metadata(false).target(target);
+
+        match &self.host {
+            Some(host) => {
+                config.host(host);
+            }
+            // Host will be taken from the environment variable
+            None if env::var("HOST").is_ok() => {}
+            None => {
+                // If called outside of build script, set default host
+                config.host(target);
+            }
+        }
 
         match target {
             _ if target.contains("linux") => {
@@ -141,17 +154,22 @@ impl Build {
             config.define("LUA_UCID", None);
         }
 
-        if self.debug.unwrap_or(cfg!(debug_assertions)) {
+        let debug = self.debug.unwrap_or(cfg!(debug_assertions));
+        if debug {
             config.define("LUA_USE_APICHECK", None);
             config.debug(true);
         }
 
-        if let Some(host) = &self.host {
-            config.host(host);
-        }
-
-        if let Some(opt_level) = &self.opt_level {
-            config.opt_level_str(opt_level);
+        match &self.opt_level {
+            Some(opt_level) => {
+                config.opt_level_str(opt_level);
+            }
+            // Opt level will be taken from the environment variable
+            None if env::var("OPT_LEVEL").is_ok() => {}
+            None => {
+                // If called outside of build script, set default opt level
+                config.opt_level(if debug { 0 } else { 2 });
+            }
         }
 
         config
