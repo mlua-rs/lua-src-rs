@@ -107,6 +107,7 @@ impl Build {
         let out_dir = self.out_dir.as_ref().ok_or("OUT_DIR is not set")?;
         let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
         let mut source_dir = manifest_dir.join(version.source_dir());
+        let lib_dir = out_dir.join("lib");
         let include_dir = out_dir.join("include");
 
         if !include_dir.exists() {
@@ -218,7 +219,7 @@ impl Build {
             .flag("-w") // Suppress all warnings
             .flag_if_supported("-fno-common") // Compile common globals like normal definitions
             .add_files_by_ext(&source_dir, "c")?
-            .out_dir(out_dir)
+            .out_dir(&lib_dir)
             .try_compile(version.lib_name())?;
 
         for f in &["lauxlib.h", "lua.h", "luaconf.h", "lualib.h"] {
@@ -230,7 +231,7 @@ impl Build {
 
         Ok(Artifacts {
             include_dir,
-            lib_dir: out_dir.clone(),
+            lib_dir,
             libs: vec![version.lib_name().to_string()],
         })
     }
