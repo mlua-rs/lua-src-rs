@@ -7,6 +7,10 @@
 #define ltablib_c
 #define LUA_LIB
 
+#if defined(__wasi__)
+#include <stdlib.h>
+#endif
+
 #include "lprefix.h"
 
 
@@ -256,6 +260,9 @@ typedef unsigned int IdxT;
 ** is to copy them to an array of a known type and use the array values.
 */
 static unsigned int l_randomizePivot (void) {
+#if defined(__wasi__)
+  return arc4random();
+#else
   clock_t c = clock();
   time_t t = time(NULL);
   unsigned int buff[sof(c) + sof(t)];
@@ -265,6 +272,7 @@ static unsigned int l_randomizePivot (void) {
   for (i = 0; i < sof(buff); i++)
     rnd += buff[i];
   return rnd;
+#endif
 }
 
 #endif					/* } */

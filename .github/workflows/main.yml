@@ -17,6 +17,7 @@ jobs:
         - x86_64-pc-windows-gnu
         - x86_64-pc-windows-msvc
         - wasm32-unknown-emscripten
+        - wasm32-wasip2
         lua: [lua54, lua53, lua52, lua51]
         include:
         - target: x86_64-unknown-linux-gnu
@@ -37,44 +38,16 @@ jobs:
           os: windows-latest
         - target: wasm32-unknown-emscripten
           os: ubuntu-latest
+        - target: wasm32-wasip2
+          os: ubuntu-latest
     steps:
     - uses: actions/checkout@main
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: ./.github/actions/setup-deps
       with:
         target: ${{ matrix.target }}
-    - name: Install GCC (i686-unknown-linux-gnu)
-      if: ${{ matrix.target == 'i686-unknown-linux-gnu' }}
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y --no-install-recommends gcc-multilib
-      shell: bash
-    - name: Install GCC (aarch64-unknown-linux-gnu)
-      if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu libc6-dev-arm64-cross
-      shell: bash
-    - name: Install GCC (arm-unknown-linux-gnueabi)
-      if: ${{ matrix.target == 'arm-unknown-linux-gnueabi' }}
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y --no-install-recommends gcc-arm-linux-gnueabi libc6-dev-armel-cross
-      shell: bash
-    - name: Install GCC (x86_64-pc-windows-gnu)
-      if: ${{ matrix.target == 'x86_64-pc-windows-gnu' }}
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y --no-install-recommends gcc-mingw-w64-x86-64
-      shell: bash
-    - name: Install emscripten (wasm32-unknown-emscripten)
-      if: ${{ matrix.target == 'wasm32-unknown-emscripten' }}
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y --no-install-recommends emscripten
-      shell: bash
     - name: Build ${{ matrix.lua }}
       run: |
-        cargo build --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release --features ${{ matrix.lua }}
+        cargo build --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }}
       shell: bash
 
   test:
@@ -83,7 +56,11 @@ jobs:
     needs: build
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        target:
+        - x86_64-unknown-linux-gnu
+        - x86_64-apple-darwin
+        - x86_64-pc-windows-msvc
+        - wasm32-wasip2
         lua: [lua54, lua53, lua52, lua51]
         include:
         - os: ubuntu-latest
@@ -92,9 +69,11 @@ jobs:
           target: x86_64-apple-darwin
         - os: windows-latest
           target: x86_64-pc-windows-msvc
+        - os: ubuntu-latest
+          target: wasm32-wasip2
     steps:
     - uses: actions/checkout@main
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: ./.github/actions/setup-deps
       with:
         target: ${{ matrix.target }}
     - name: Run ${{ matrix.lua }} tests
@@ -103,12 +82,11 @@ jobs:
       shell: bash
 
   test_standalone:
-    name: Test
+    name: Test Standalone
     runs-on: ${{ matrix.os }}
     needs: build
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
         include:
         - os: ubuntu-latest
           target: x86_64-unknown-linux-gnu
@@ -118,35 +96,12 @@ jobs:
           target: x86_64-pc-windows-msvc
     steps:
     - uses: actions/checkout@main
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: ./.github/actions/setup-deps
       with:
         target: ${{ matrix.target }}
     - name: Run standalone tests
       run: |
         cargo test
-
-  test_emscripten:
-    name: Test emscripten
-    runs-on: ubuntu-latest
-    needs: build
-    strategy:
-      matrix:
-        lua: [lua54, lua53, lua52, lua51]
-    steps:
-    - uses: actions/checkout@main
-    - uses: dtolnay/rust-toolchain@stable
-      with:
-        target: wasm32-unknown-emscripten
-    - name: Install emscripten
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install -y --no-install-recommends emscripten
-      shell: bash
-    - name: Run ${{ matrix.lua }} tests
-      run: |
-        export CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_RUNNER=node
-        cargo test --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }}
-      shell: bash
 
   rustfmt:
     name: Rustfmt
