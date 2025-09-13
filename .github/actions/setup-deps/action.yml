@@ -3,6 +3,9 @@ inputs:
   target:
     description: 'rust target being set up'
     required: true
+  emscripten_sdk:
+    description: 'emsdk version to install'
+    default: latest
   wasi_sdk:
     description: 'wasi-sdk version to install'
     default: 27
@@ -43,11 +46,26 @@ runs:
         sudo apt-get update -y
         sudo apt-get install -y --no-install-recommends gcc-mingw-w64-x86-64
       shell: bash
+
     - name: Install emscripten (wasm32-unknown-emscripten)
       if: ${{ inputs.target == 'wasm32-unknown-emscripten' }}
       run: |
-        sudo apt-get update -y
-        sudo apt-get install -y --no-install-recommends emscripten
+        EM_CONFIG=$HOME/emsdk/.emscripten
+        echo "EM_CONFIG=$EM_CONFIG" >> $GITHUB_ENV
+        curl -L -o ~/emsdk-main.tar.gz https://github.com/emscripten-core/emsdk/archive/main.tar.gz
+        tar -C ~ -xf ~/emsdk-main.tar.gz
+        mv ~/emsdk-main ~/emsdk
+        cd ~/emsdk
+        ./emsdk install ${{ inputs.emscripten_sdk }}
+        ./emsdk activate ${{ inputs.emscripten_sdk }}
+        source ./emsdk_env.sh
+        echo "EMSDK=$EMSDK" >> $GITHUB_ENV
+        echo "EMSDK_NODE=$EMSDK_NODE" >> $GITHUB_ENV
+        echo "CC_wasm32_unknown_emscripten=$EMSDK/upstream/emscripten/emcc" >> $GITHUB_ENV
+        echo "CXX_wasm32_unknown_emscripten=$EMSDK/upstream/emscripten/em++" >> $GITHUB_ENV
+        echo "AR_wasm32_unknown_emscripten=$EMSDK/upstream/emscripten/emar" >> $GITHUB_ENV
+        echo "CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_LINKER=$EMSDK/upstream/emscripten/emcc" >> $GITHUB_ENV
+        echo "CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_RUNNER=$EMSDK_NODE" >> $GITHUB_ENV
       shell: bash
 
     - name: Install wasi-sdk/Wasmtime (wasm32-wasip2)
