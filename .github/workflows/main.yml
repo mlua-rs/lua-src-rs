@@ -7,6 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        lua: [lua54, lua53, lua52, lua51]
         target:
         - x86_64-unknown-linux-gnu
         - i686-unknown-linux-gnu
@@ -18,7 +19,6 @@ jobs:
         - x86_64-pc-windows-msvc
         - wasm32-unknown-emscripten
         - wasm32-wasip2
-        lua: [lua54, lua53, lua52, lua51]
         include:
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-latest
@@ -47,7 +47,7 @@ jobs:
         target: ${{ matrix.target }}
     - name: Build ${{ matrix.lua }}
       run: |
-        cargo build --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }}
+        cargo build --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }} --target ${{ matrix.target }}
       shell: bash
 
   test:
@@ -56,21 +56,27 @@ jobs:
     needs: build
     strategy:
       matrix:
+        lua: [lua54, lua53, lua52, lua51]
         target:
         - x86_64-unknown-linux-gnu
         - x86_64-apple-darwin
+        - aarch64-apple-darwin
         - x86_64-pc-windows-msvc
+        - wasm32-unknown-emscripten
         - wasm32-wasip2
-        lua: [lua54, lua53, lua52, lua51]
         include:
-        - os: ubuntu-latest
-          target: x86_64-unknown-linux-gnu
-        - os: macos-latest
-          target: x86_64-apple-darwin
-        - os: windows-latest
-          target: x86_64-pc-windows-msvc
-        - os: ubuntu-latest
-          target: wasm32-wasip2
+        - target: x86_64-unknown-linux-gnu
+          os: ubuntu-latest
+        - target: x86_64-apple-darwin
+          os: macos-latest
+        - target: aarch64-apple-darwin
+          os: macos-latest
+        - target: x86_64-pc-windows-msvc
+          os: windows-latest
+        - target: wasm32-unknown-emscripten
+          os: ubuntu-latest
+        - target: wasm32-wasip2
+          os: ubuntu-latest
     steps:
     - uses: actions/checkout@main
     - uses: ./.github/actions/setup-deps
@@ -78,7 +84,7 @@ jobs:
         target: ${{ matrix.target }}
     - name: Run ${{ matrix.lua }} tests
       run: |
-        cargo test --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }}
+        cargo test --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }} --target ${{ matrix.target }}
       shell: bash
 
   test_standalone:
@@ -88,12 +94,12 @@ jobs:
     strategy:
       matrix:
         include:
-        - os: ubuntu-latest
-          target: x86_64-unknown-linux-gnu
-        - os: macos-latest
-          target: x86_64-apple-darwin
-        - os: windows-latest
-          target: x86_64-pc-windows-msvc
+        - target: x86_64-unknown-linux-gnu
+          os: ubuntu-latest
+        - target: x86_64-apple-darwin
+          os: macos-latest
+        - target: x86_64-pc-windows-msvc
+          os: windows-latest
     steps:
     - uses: actions/checkout@main
     - uses: ./.github/actions/setup-deps
