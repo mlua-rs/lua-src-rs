@@ -257,7 +257,7 @@ impl Build {
 }
 
 impl Version {
-    fn source_dir(&self) -> &str {
+    fn source_dir(&self) -> &'static str {
         match self {
             Lua51 => "lua-5.1.5",
             Lua52 => "lua-5.2.4",
@@ -266,7 +266,7 @@ impl Version {
         }
     }
 
-    fn lib_name(&self) -> &str {
+    fn lib_name(&self) -> &'static str {
         match self {
             Lua51 => "lua5.1",
             Lua52 => "lua5.2",
