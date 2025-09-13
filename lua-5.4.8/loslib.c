@@ -100,6 +100,7 @@
 ** ===================================================================
 */
 #if !defined(lua_tmpnam)	/* { */
+#if !defined(__wasi__)	  /* { */
 
 #if defined(LUA_USE_POSIX)	/* { */
 
@@ -124,13 +125,14 @@
 #define lua_tmpnam(b,e)		{ e = (tmpnam(b) == NULL); }
 
 #endif				/* } */
+#endif				/* } */
 
 #endif				/* } */
 /* }================================================================== */
 
 
 #if !defined(l_system)
-#if defined(LUA_USE_IOS)
+#if defined(LUA_USE_IOS) || defined(__wasi__)
 /* Despite claiming to be ISO C, iOS does not implement 'system'. */
 #define l_system(cmd) ((cmd) == NULL ? 0 : -1)
 #else
@@ -169,6 +171,7 @@ static int os_rename (lua_State *L) {
 
 
 static int os_tmpname (lua_State *L) {
+#if !defined(__wasi__)
   char buff[LUA_TMPNAMBUFSIZE];
   int err;
   lua_tmpnam(buff, err);
@@ -176,6 +179,9 @@ static int os_tmpname (lua_State *L) {
     return luaL_error(L, "unable to generate a unique filename");
   lua_pushstring(L, buff);
   return 1;
+#else
+  luaL_error(L, "not supported on WASI");
+#endif
 }
 
 
@@ -186,8 +192,12 @@ static int os_getenv (lua_State *L) {
 
 
 static int os_clock (lua_State *L) {
+#if !defined(__wasi__)
   lua_pushnumber(L, ((lua_Number)clock())/(lua_Number)CLOCKS_PER_SEC);
   return 1;
+#else
+  luaL_error(L, "not supported on WASI");
+#endif
 }
 
 

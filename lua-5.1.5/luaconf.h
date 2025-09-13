@@ -54,7 +54,9 @@
 #if defined(LUA_USE_POSIX)
 #define LUA_USE_MKSTEMP
 #define LUA_USE_ISATTY
+#if !defined(__wasi__)
 #define LUA_USE_POPEN
+#endif
 #define LUA_USE_ULONGJMP
 #endif
 

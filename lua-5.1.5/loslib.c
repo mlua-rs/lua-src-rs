@@ -36,8 +36,12 @@ static int os_pushresult (lua_State *L, int i, const char *filename) {
 
 
 static int os_execute (lua_State *L) {
+#if !defined(__wasi__)
   lua_pushinteger(L, system(luaL_optstring(L, 1, NULL)));
   return 1;
+#else
+  luaL_error(L, "not supported on WASI");
+#endif
 }
 
 
@@ -55,6 +59,7 @@ static int os_rename (lua_State *L) {
 
 
 static int os_tmpname (lua_State *L) {
+#if !defined(__wasi__)
   char buff[LUA_TMPNAMBUFSIZE];
   int err;
   lua_tmpnam(buff, err);
@@ -62,6 +67,9 @@ static int os_tmpname (lua_State *L) {
     return luaL_error(L, "unable to generate a unique filename");
   lua_pushstring(L, buff);
   return 1;
+#else
+  luaL_error(L, "not supported on WASI");
+#endif
 }
 
 
@@ -72,8 +80,12 @@ static int os_getenv (lua_State *L) {
 
 
 static int os_clock (lua_State *L) {
+#if !defined(__wasi__)
   lua_pushnumber(L, ((lua_Number)clock())/(lua_Number)CLOCKS_PER_SEC);
   return 1;
+#else
+  luaL_error(L, "not supported on WASI");
+#endif
 }
 
 

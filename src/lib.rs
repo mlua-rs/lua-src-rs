@@ -130,6 +130,7 @@ impl Build {
             }
         }
 
+        let mut libs = vec![version.lib_name().to_string()];
         match target {
             _ if target.contains("linux") => {
                 config.define("LUA_USE_LINUX", None);
@@ -187,6 +188,24 @@ impl Build {
                 }
                 source_dir = cpp_source_dir
             }
+            _ if target.contains("wasi") => {
+                // WASI is posix-like, but further patches are needed to the Lua
+                // source to get it compiling.
+                config.define("LUA_USE_POSIX", None);
+
+                // Bring in just enough signal-handling support to get Lua at
+                // least compiling, but WASI in general does not support
+                // signals.
+                config.define("_WASI_EMULATED_SIGNAL", None);
+                libs.push("wasi-emulated-signal".to_string());
+
+                // https://github.com/WebAssembly/wasi-sdk/blob/main/SetjmpLongjmp.md
+                // for information about getting setjmp/longjmp working.
+                config.flag("-mllvm").flag("-wasm-enable-eh");
+                config.flag("-mllvm").flag("-wasm-use-legacy-eh=false");
+                config.flag("-mllvm").flag("-wasm-enable-sjlj");
+                libs.push("setjmp".to_string());
+            }
             _ => Err(format!("don't know how to build Lua for {target}"))?,
         }
 
@@ -232,7 +251,7 @@ impl Build {
         Ok(Artifacts {
             include_dir,
             lib_dir,
-            libs: vec![version.lib_name().to_string()],
+            libs,
         })
     }
 }
@@ -280,7 +299,7 @@ impl Artifacts {
     pub fn print_cargo_metadata(&self) {
         println!("cargo:rustc-link-search=native={}", self.lib_dir.display());
         for lib in self.libs.iter() {
-            println!("cargo:rustc-link-lib=static={lib}");
+            println!("cargo:rustc-link-lib=static:-bundle={lib}");
         }
     }
 }
