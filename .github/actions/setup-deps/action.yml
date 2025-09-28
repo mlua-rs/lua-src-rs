@@ -11,7 +11,7 @@ inputs:
     default: 27
   wasmtime:
     description: 'wasmtime version to install'
-    default: dev
+    default: v37.0.1
 
 runs:
   using: composite
