@@ -154,6 +154,46 @@ impl Build {
                 // Defined in Lua >= 5.3
                 config.define("LUA_USE_WINDOWS", None);
             }
+            _ if target.contains("xtensa-esp32") => {
+                config
+                    .define("LUA_32BITS", None) // Use 32-bit integers and size_t
+                    .define("LUA_C89_NUMBERS", None) // Use C89 for better compatibility
+                    .flag("-fexceptions")
+                    .flag("-Os") // Optimize for size
+                    .flag("-mlongcalls") // Use long calls to avoid call8 range issues
+                    .flag("-ffunction-sections") // Place each function in its own section
+                    .flag("-fdata-sections"); // Place each data item in its own section
+                let new_dir = out_dir.join("esp_source");
+                if new_dir.exists() {
+                    fs::remove_dir_all(&new_dir)
+                        .context(|| format!("Cannot remove '{}'", new_dir.display()))?;
+                }
+                fs::create_dir_all(&new_dir)
+                    .context(|| format!("Cannot create '{}'", new_dir.display()))?;
+                for file in fs::read_dir(manifest_dir.join(version.source_dir())).context(|| {
+                    format!(
+                        "Cannot read '{}'",
+                        manifest_dir.join(version.source_dir()).display()
+                    )
+                })? {
+                    let file = file?;
+                    let src_file = manifest_dir
+                        .join(version.source_dir())
+                        .join(file.file_name());
+                    let dst_file = new_dir.join(file.file_name());
+                    let content = fs::read(&src_file)
+                        .context(|| format!("Cannot read '{}'", src_file.display()))?
+                        // jumps
+                        .iter()
+                        .map(|&b| b as char)
+                        .collect::<String>()
+                        .replace("_setjmp", "setjmp")
+                        .replace("_longjmp", "longjmp");
+                    fs::write(&dst_file, content)
+                        .context(|| format!("Cannot write to '{}'", dst_file.display()))?;
+                }
+                source_dir = new_dir
+            }
             _ if target.ends_with("emscripten") => {
                 config
                     .define("LUA_USE_POSIX", None)
