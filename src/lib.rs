@@ -147,7 +147,7 @@ impl Build {
             }
             _ if target.contains("apple-ios") => {
                 match version {
-                    Lua54 => config.define("LUA_USE_IOS", None),
+                    Lua54 | Lua55 => config.define("LUA_USE_IOS", None),
                     _ => config.define("LUA_USE_POSIX", None),
                 };
             }
@@ -212,7 +212,10 @@ impl Build {
 
         if let Lua54 = version {
             config.define("LUA_COMPAT_5_3", None);
-            #[cfg(feature = "ucid")]
+        }
+
+        #[cfg(feature = "ucid")]
+        if let Lua54 | Lua55 = version {
             config.define("LUA_UCID", None);
         }
 
