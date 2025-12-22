@@ -9,6 +9,8 @@ fn main() {
     let version = lua_src::Lua53;
     #[cfg(feature = "lua54")]
     let version = lua_src::Lua54;
+    #[cfg(feature = "lua55")]
+    let version = lua_src::Lua55;
 
     let artifacts = lua_src::Build::new().build(version);
     artifacts.print_cargo_metadata();

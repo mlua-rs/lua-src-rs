@@ -10,6 +10,7 @@ pub enum Version {
     Lua52,
     Lua53,
     Lua54,
+    Lua55,
 }
 pub use self::Version::*;
 
@@ -263,6 +264,7 @@ impl Version {
             Lua52 => "lua-5.2.4",
             Lua53 => "lua-5.3.6",
             Lua54 => "lua-5.4.8",
+            Lua55 => "lua-5.5.0",
         }
     }
 
@@ -272,6 +274,7 @@ impl Version {
             Lua52 => "lua5.2",
             Lua53 => "lua5.3",
             Lua54 => "lua5.4",
+            Lua55 => "lua5.5",
         }
     }
 }

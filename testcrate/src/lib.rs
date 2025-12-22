@@ -1,6 +1,8 @@
+#![allow(unsafe_op_in_unsafe_fn, clippy::missing_safety_doc)]
+
 use std::os::raw::{c_char, c_int, c_long, c_void};
 
-extern "C" {
+unsafe extern "C" {
     pub fn luaL_newstate() -> *mut c_void;
     pub fn luaL_openlibs(state: *mut c_void);
     pub fn lua_getfield(state: *mut c_void, index: c_int, k: *const c_char);
@@ -25,7 +27,7 @@ extern "C" {
         ctx: c_int,
         k: *const c_void,
     ) -> c_int;
-    #[cfg(any(feature = "lua53", feature = "lua54"))]
+    #[cfg(any(feature = "lua53", feature = "lua54", feature = "lua55"))]
     pub fn lua_pcallk(
         state: *mut c_void,
         nargs: c_int,
@@ -37,7 +39,7 @@ extern "C" {
 
     #[cfg(feature = "lua52")]
     pub fn lua_getglobal(state: *mut c_void, k: *const c_char);
-    #[cfg(any(feature = "lua53", feature = "lua54"))]
+    #[cfg(any(feature = "lua53", feature = "lua54", feature = "lua55"))]
     pub fn lua_getglobal(state: *mut c_void, k: *const c_char) -> c_int;
 }
 
@@ -46,7 +48,7 @@ pub unsafe fn lua_getglobal(state: *mut c_void, k: *const c_char) {
     lua_getfield(state, -10002 /* LUA_GLOBALSINDEX */, k);
 }
 
-#[cfg(any(feature = "lua52", feature = "lua53", feature = "lua54"))]
+#[cfg(not(feature = "lua51"))]
 pub unsafe fn lua_pcall(
     state: *mut c_void,
     nargs: c_int,
