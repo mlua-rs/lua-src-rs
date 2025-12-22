@@ -88,6 +88,8 @@ mod tests {
             assert_eq!(version, "Lua 5.3");
             #[cfg(feature = "lua54")]
             assert_eq!(version, "Lua 5.4");
+            #[cfg(feature = "lua55")]
+            assert_eq!(version, "Lua 5.5");
         }
     }
 
@@ -97,7 +99,7 @@ mod tests {
             let state = luaL_newstate();
             let ret = luaL_loadstring(state, c"😀 = '🌚︎'".as_ptr());
 
-            #[cfg(feature = "lua54")]
+            #[cfg(any(feature = "lua54", feature = "lua55"))]
             {
                 assert_eq!(ret, 0);
                 assert_eq!(lua_pcall(state, 0, 0, 0), 0);
@@ -105,7 +107,7 @@ mod tests {
                 assert_eq!(to_string(state, -1), "🌚︎");
             }
 
-            #[cfg(not(feature = "lua54"))]
+            #[cfg(not(any(feature = "lua54", feature = "lua55")))]
             assert_ne!(ret, 0);
         }
     }
