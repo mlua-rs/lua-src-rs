@@ -7,13 +7,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        lua: [lua54, lua53, lua52, lua51]
+        lua: [lua55, lua54, lua53, lua52, lua51]
         target:
         - x86_64-unknown-linux-gnu
         - i686-unknown-linux-gnu
         - aarch64-unknown-linux-gnu
         - arm-unknown-linux-gnueabi
-        - x86_64-apple-darwin
         - aarch64-apple-darwin
         - x86_64-pc-windows-gnu
         - x86_64-pc-windows-msvc
@@ -28,8 +27,6 @@ jobs:
           os: ubuntu-latest
         - target: arm-unknown-linux-gnueabi
           os: ubuntu-latest
-        - target: x86_64-apple-darwin
-          os: macos-latest
         - target: aarch64-apple-darwin
           os: macos-latest
         - target: x86_64-pc-windows-gnu
@@ -56,10 +53,9 @@ jobs:
     needs: build
     strategy:
       matrix:
-        lua: [lua54, lua53, lua52, lua51]
+        lua: [lua55, lua54, lua53, lua52, lua51]
         target:
         - x86_64-unknown-linux-gnu
-        - x86_64-apple-darwin
         - aarch64-apple-darwin
         - x86_64-pc-windows-msvc
         - wasm32-unknown-emscripten
@@ -67,8 +63,6 @@ jobs:
         include:
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-latest
-        - target: x86_64-apple-darwin
-          os: macos-latest
         - target: aarch64-apple-darwin
           os: macos-latest
         - target: x86_64-pc-windows-msvc
@@ -97,7 +91,7 @@ jobs:
         - os: ubuntu-latest
           target: x86_64-unknown-linux-gnu
         - os: macos-latest
-          target: x86_64-apple-darwin
+          target: aarch64-apple-darwin
         - os: windows-latest
           target: x86_64-pc-windows-msvc
     steps:
