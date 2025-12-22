@@ -7,6 +7,10 @@
 #define ltablib_c
 #define LUA_LIB
 
+#if defined(__wasi__)
+#include <stdlib.h>
+#endif
+
 #include "lprefix.h"
 
 

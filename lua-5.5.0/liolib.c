@@ -93,7 +93,7 @@ static int l_checkmode (const char *mode) {
 
 #if !defined(l_getc)		/* { */
 
-#if defined(LUA_USE_POSIX)
+#if defined(LUA_USE_POSIX) && !defined(__wasi__)
 #define l_getc(f)		getc_unlocked(f)
 #define l_lockfile(f)		flockfile(f)
 #define l_unlockfile(f)		funlockfile(f)
@@ -280,14 +280,17 @@ static int io_open (lua_State *L) {
 /*
 ** function to close 'popen' files
 */
+#if !defined(__wasi__)
 static int io_pclose (lua_State *L) {
   LStream *p = tolstream(L);
   errno = 0;
   return luaL_execresult(L, l_pclose(L, p->f));
 }
+#endif
 
 
 static int io_popen (lua_State *L) {
+#if !defined(__wasi__)
   const char *filename = luaL_checkstring(L, 1);
   const char *mode = luaL_optstring(L, 2, "r");
   LStream *p = newprefile(L);
@@ -296,14 +299,21 @@ static int io_popen (lua_State *L) {
   p->f = l_popen(L, filename, mode);
   p->closef = &io_pclose;
   return (p->f == NULL) ? luaL_fileresult(L, 0, filename) : 1;
+#else
+  luaL_error(L, "not supported on WASI");
+#endif
 }
 
 
 static int io_tmpfile (lua_State *L) {
+#if !defined(__wasi__)
   LStream *p = newfile(L);
   errno = 0;
   p->f = tmpfile();
   return (p->f == NULL) ? luaL_fileresult(L, 0, NULL) : 1;
+#else
+  luaL_error(L, "not supported on WASI");
+#endif
 }
 
 
