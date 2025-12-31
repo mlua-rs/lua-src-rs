@@ -1,10 +1,10 @@
 [package]
 name = "lua-src"
-version = "548.1.2"
+version = "550.0.0"
 authors = ["Aleksandr Orlenko <zxteam@protonmail.com>"]
 edition = "2024"
 repository = "https://github.com/mlua-rs/lua-src-rs"
-keywords = ["lua", "lua51", "lua52", "lua53", "lua54", "lua55"]
+keywords = ["lua", "lua51", "lua54", "lua55"] # Max 5 keywords
 readme = "README.md"
 license = "MIT"
 description = """
