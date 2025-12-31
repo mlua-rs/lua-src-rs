@@ -239,7 +239,7 @@ impl Build {
 
         config
             .include(&source_dir)
-            .flag("-w") // Suppress all warnings
+            .warnings(false) // Suppress all warnings
             .flag_if_supported("-fno-common") // Compile common globals like normal definitions
             .add_files_by_ext(&source_dir, "c")?
             .out_dir(&lib_dir)
