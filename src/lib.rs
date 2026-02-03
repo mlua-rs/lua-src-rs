@@ -107,7 +107,7 @@ impl Build {
         let target = self.target.as_ref().ok_or("TARGET is not set")?;
         let out_dir = self.out_dir.as_ref().ok_or("OUT_DIR is not set")?;
         let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-        let mut source_dir = manifest_dir.join(version.source_dir());
+        let source_dir = manifest_dir.join(version.source_dir());
         let lib_dir = out_dir.join("lib");
         let include_dir = out_dir.join("include");
 
@@ -158,37 +158,7 @@ impl Build {
             _ if target.ends_with("emscripten") => {
                 config
                     .define("LUA_USE_POSIX", None)
-                    .cpp(true)
-                    .flag("-fexceptions")
-                    .flag("-fwasm-exceptions"); // Enable exceptions to be caught
-
-                let cpp_source_dir = out_dir.join("cpp_source");
-                if cpp_source_dir.exists() {
-                    fs::remove_dir_all(&cpp_source_dir)
-                        .context(|| format!("Cannot remove '{}'", cpp_source_dir.display()))?;
-                }
-                fs::create_dir_all(&cpp_source_dir)
-                    .context(|| format!("Cannot create '{}'", cpp_source_dir.display()))?;
-
-                for file in fs::read_dir(&source_dir)
-                    .context(|| format!("Cannot read '{}'", source_dir.display()))?
-                {
-                    let file = file?;
-                    let filename = file.file_name();
-                    let filename = &*filename.to_string_lossy();
-                    let src_file = source_dir.join(file.file_name());
-                    let dst_file = cpp_source_dir.join(file.file_name());
-
-                    let mut content = fs::read(&src_file)
-                        .context(|| format!("Cannot read '{}'", src_file.display()))?;
-                    if ["lauxlib.h", "lua.h", "lualib.h"].contains(&filename) {
-                        content.splice(0..0, b"extern \"C\" {\n".to_vec());
-                        content.extend(b"\n}".to_vec())
-                    }
-                    fs::write(&dst_file, content)
-                        .context(|| format!("Cannot write to '{}'", dst_file.display()))?;
-                }
-                source_dir = cpp_source_dir
+                    .flag("-sSUPPORT_LONGJMP=wasm"); // Enable setjmp/longjmp support (WASM-specific)
             }
             _ if target.contains("wasi") => {
                 // WASI is posix-like, but further patches are needed to the Lua
