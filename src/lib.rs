@@ -159,7 +159,8 @@ impl Build {
                 config
                     .define("LUA_USE_POSIX", None)
                     .cpp(true)
-                    .flag("-fexceptions"); // Enable exceptions to be caught
+                    .flag("-fexceptions")
+                    .flag("-fwasm-exceptions"); // Enable exceptions to be caught
 
                 let cpp_source_dir = out_dir.join("cpp_source");
                 if cpp_source_dir.exists() {
