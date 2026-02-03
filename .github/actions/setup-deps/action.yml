@@ -1,4 +1,5 @@
 name: 'Setup various CI dependencies'
+description: 'Setup Rust target and necessary dependencies for WASI compilation'
 inputs:
   target:
     description: 'rust target being set up'
@@ -22,6 +23,12 @@ runs:
     - run: echo "CARGO_BUILD_TARGET=${{ matrix.target }}" >> $GITHUB_ENV
       shell: bash
 
+    - name: Install GCC (x86_64-unknown-linux-musl)
+      if: ${{ inputs.target == 'x86_64-unknown-linux-musl' }}
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y --no-install-recommends musl-dev musl-tools
+      shell: bash
     - name: Install GCC (i686-unknown-linux-gnu)
       if: ${{ inputs.target == 'i686-unknown-linux-gnu' }}
       run: |

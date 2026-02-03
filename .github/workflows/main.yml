@@ -10,6 +10,7 @@ jobs:
         lua: [lua55, lua54, lua53, lua52, lua51]
         target:
         - x86_64-unknown-linux-gnu
+        - x86_64-unknown-linux-musl
         - i686-unknown-linux-gnu
         - aarch64-unknown-linux-gnu
         - arm-unknown-linux-gnueabi
@@ -20,6 +21,8 @@ jobs:
         - wasm32-wasip2
         include:
         - target: x86_64-unknown-linux-gnu
+          os: ubuntu-latest
+        - target: x86_64-unknown-linux-musl
           os: ubuntu-latest
         - target: i686-unknown-linux-gnu
           os: ubuntu-latest
@@ -56,12 +59,15 @@ jobs:
         lua: [lua55, lua54, lua53, lua52, lua51]
         target:
         - x86_64-unknown-linux-gnu
+        - x86_64-unknown-linux-musl
         - aarch64-apple-darwin
         - x86_64-pc-windows-msvc
         - wasm32-unknown-emscripten
         - wasm32-wasip2
         include:
         - target: x86_64-unknown-linux-gnu
+          os: ubuntu-latest
+        - target: x86_64-unknown-linux-musl
           os: ubuntu-latest
         - target: aarch64-apple-darwin
           os: macos-latest
