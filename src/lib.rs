@@ -139,6 +139,9 @@ impl Build {
             _ if target.ends_with("bsd") => {
                 config.define("LUA_USE_LINUX", None);
             }
+            _ if target.ends_with("hurd-gnu") => {
+                config.define("LUA_USE_LINUX", None);
+            }
             _ if target.contains("apple-darwin") => {
                 match version {
                     Lua51 => config.define("LUA_USE_LINUX", None),
