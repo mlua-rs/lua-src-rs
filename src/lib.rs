@@ -26,6 +26,7 @@ pub struct Build {
 /// Represents the artifacts produced by the build process.
 #[derive(Clone, Debug)]
 pub struct Artifacts {
+    root_dir: PathBuf,
     include_dir: PathBuf,
     lib_dir: PathBuf,
     libs: Vec<String>,
@@ -254,6 +255,7 @@ impl Build {
         }
 
         Ok(Artifacts {
+            root_dir: out_dir.clone(),
             include_dir,
             lib_dir,
             libs,
@@ -284,6 +286,11 @@ impl Version {
 }
 
 impl Artifacts {
+    /// Returns the directory containing the `include` and `lib` directories.
+    pub fn root_dir(&self) -> &Path {
+        &self.root_dir
+    }
+
     /// Returns the directory containing the Lua headers.
     pub fn include_dir(&self) -> &Path {
         &self.include_dir
@@ -308,6 +315,17 @@ impl Artifacts {
         for lib in self.libs.iter() {
             println!("cargo:rustc-link-lib=static:-bundle={lib}");
         }
+    }
+
+    /// Prints the necessary Cargo metadata such that dependent build scripts
+    /// can find the Lua install root and include directories in their
+    /// `DEP_LUA_ROOT` and `DEP_LUA_INCLUDE` environment variables.
+    ///
+    /// This method is typically called in a build script to inform Cargo
+    /// about the Lua install location.
+    pub fn print_cargo_root(&self) {
+        println!("cargo:root={}", self.root_dir().display());
+        println!("cargo:include={}", self.include_dir().display());
     }
 }
 
