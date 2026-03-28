@@ -284,6 +284,8 @@ impl Artifacts {
         for lib in self.libs.iter() {
             println!("cargo:rustc-link-lib=static:-bundle={lib}");
         }
+        println!("cargo:include={}", self.include_dir.display());
+        println!("cargo:lib={}", self.lib_dir.display());
     }
 }
 
