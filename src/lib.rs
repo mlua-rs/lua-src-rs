@@ -145,7 +145,9 @@ impl Build {
                 config.define("LUA_USE_LINUX", None);
             }
             _ if target.ends_with("illumos") => {
-                config.define("LUA_USE_POSIX", None);
+                config
+                    .define("LUA_USE_POSIX", None)
+                    .define("LUA_USE_DLOPEN", None);
             }
             _ if target.ends_with("solaris") => {
                 config.define("LUA_USE_POSIX", None);
