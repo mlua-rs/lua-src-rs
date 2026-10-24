@@ -4,23 +4,27 @@ inputs:
   target:
     description: 'rust target being set up'
     required: true
+  toolchain:
+    description: 'Rust toolchain to install'
+    default: stable
   emscripten_sdk:
     description: 'emsdk version to install'
     default: latest
   wasi_sdk:
     description: 'wasi-sdk version to install'
-    default: 33
+    default: '34'
   wasmtime:
     description: 'wasmtime version to install'
-    default: v47.0.3
+    default: v50.0.0
 
 runs:
   using: composite
   steps:
     - uses: dtolnay/rust-toolchain@stable
       with:
+        toolchain: ${{ inputs.toolchain }}
         target: ${{ inputs.target }}
-    - run: echo "CARGO_BUILD_TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+    - run: echo "CARGO_BUILD_TARGET=${{ inputs.target }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Install GCC (x86_64-unknown-linux-musl)
@@ -75,19 +79,36 @@ runs:
         echo "CARGO_TARGET_WASM32_UNKNOWN_EMSCRIPTEN_RUNNER=$EMSDK_NODE" >> $GITHUB_ENV
       shell: bash
 
-    - name: Install wasi-sdk/Wasmtime (wasm32-wasip2)
-      if: ${{ inputs.target == 'wasm32-wasip2' }}
+    - name: Install wasi-sdk/Wasmtime
+      if: ${{ inputs.target == 'wasm32-unknown-unknown' || inputs.target == 'wasm32-wasip2' || inputs.target == 'wasm32-wasip3' }}
       working-directory: ${{ runner.tool_cache }}
+      env:
+        WASM_TARGET: ${{ inputs.target }}
       run: |
-        curl -LO https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{ inputs.wasi_sdk }}/wasi-sdk-${{ inputs.wasi_sdk }}.0-x86_64-linux.tar.gz
+        curl -fLO https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{ inputs.wasi_sdk }}/wasi-sdk-${{ inputs.wasi_sdk }}.0-x86_64-linux.tar.gz
         tar xf wasi-sdk-${{ inputs.wasi_sdk }}.0-x86_64-linux.tar.gz
-        WASI_SDK_PATH=`pwd`/wasi-sdk-${{ inputs.wasi_sdk }}.0-x86_64-linux
-        echo "WASI_SDK_PATH=$WASI_SDK_PATH" >> $GITHUB_ENV
-        echo "CC_wasm32_wasip2=$WASI_SDK_PATH/bin/clang" >> $GITHUB_ENV
-        echo "CARGO_TARGET_WASM32_WASIP2_LINKER=$WASI_SDK_PATH/bin/clang" >> $GITHUB_ENV
-        echo "CARGO_TARGET_WASM32_WASIP2_RUSTFLAGS=-Clink-arg=-Wl,--export=cabi_realloc" >> $GITHUB_ENV
+        WASI_SDK_PATH="$PWD/wasi-sdk-${{ inputs.wasi_sdk }}.0-x86_64-linux"
+        echo "WASI_SDK_PATH=$WASI_SDK_PATH" >> "$GITHUB_ENV"
+        cc_target="${WASM_TARGET//-/_}"
+        cargo_target="CARGO_TARGET_${cc_target^^}"
+        echo "CC_$cc_target=$WASI_SDK_PATH/bin/clang" >> "$GITHUB_ENV"
+        rustflags="-Clink-arg=-Wl,--export=cabi_realloc"
+        runner_flags="-W exceptions"
+        if [[ "$WASM_TARGET" == wasm32-unknown-unknown ]]; then
+          echo "AR_$cc_target=$WASI_SDK_PATH/bin/llvm-ar" >> "$GITHUB_ENV"
+          echo "CFLAGS_$cc_target=--target=wasm32-wasip1" >> "$GITHUB_ENV"
+          rustflags="-Lnative=$WASI_SDK_PATH/share/wasi-sysroot/lib/wasm32-wasip1 -lstatic=c"
+        else
+          echo "${cargo_target}_LINKER=$WASI_SDK_PATH/bin/clang" >> "$GITHUB_ENV"
+        fi
+        if [[ "$WASM_TARGET" == wasm32-wasip3 ]]; then
+          rustflags+=" -Clink-self-contained=no"
+          runner_flags+=" -S p3"
+        fi
+        echo "${cargo_target}_RUSTFLAGS=$rustflags" >> "$GITHUB_ENV"
 
-        curl -LO https://github.com/bytecodealliance/wasmtime/releases/download/${{ inputs.wasmtime }}/wasmtime-${{ inputs.wasmtime }}-x86_64-linux.tar.xz
+        curl -fLO https://github.com/bytecodealliance/wasmtime/releases/download/${{ inputs.wasmtime }}/wasmtime-${{ inputs.wasmtime }}-x86_64-linux.tar.xz
         tar xf wasmtime-${{ inputs.wasmtime }}-x86_64-linux.tar.xz
-        echo "CARGO_TARGET_WASM32_WASIP2_RUNNER=`pwd`/wasmtime-${{ inputs.wasmtime }}-x86_64-linux/wasmtime -W exceptions" >> $GITHUB_ENV
+        echo "$PWD/wasmtime-${{ inputs.wasmtime }}-x86_64-linux" >> "$GITHUB_PATH"
+        echo "${cargo_target}_RUNNER=$PWD/wasmtime-${{ inputs.wasmtime }}-x86_64-linux/wasmtime $runner_flags" >> "$GITHUB_ENV"
       shell: bash

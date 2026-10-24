@@ -173,7 +173,7 @@ impl Build {
                     .define("LUA_USE_POSIX", None)
                     .flag("-sSUPPORT_LONGJMP=wasm"); // Enable setjmp/longjmp support (WASM-specific)
             }
-            _ if target.contains("wasi") => {
+            _ if target.contains("wasi") || target == "wasm32-unknown-unknown" => {
                 // WASI is posix-like, but further patches are needed to the Lua
                 // source to get it compiling.
                 config.define("LUA_USE_POSIX", None);

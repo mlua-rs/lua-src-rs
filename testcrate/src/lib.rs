@@ -75,12 +75,23 @@ pub unsafe fn to_string<'a>(state: *mut c_void, index: c_int) -> &'a str {
     std::str::from_utf8(bytes).unwrap()
 }
 
-#[cfg(test)]
+#[cfg(target_os = "unknown")]
+mod allocator;
+
+#[cfg(target_os = "unknown")]
+#[unsafe(no_mangle)]
+pub extern "C" fn run_tests() {
+    tests::test_lua_version();
+    tests::test_unicode_identifiers();
+    tests::test_exceptions();
+}
+
+#[cfg(any(test, target_os = "unknown"))]
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_lua_version() {
+    #[cfg_attr(not(target_os = "unknown"), test)]
+    pub fn test_lua_version() {
         unsafe {
             let state = luaL_newstate();
             assert!(!state.is_null());
@@ -103,8 +114,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_unicode_identifiers() {
+    #[cfg_attr(not(target_os = "unknown"), test)]
+    pub fn test_unicode_identifiers() {
         unsafe {
             let state = luaL_newstate();
             let ret = luaL_loadstring(state, c"😀 = '🌚︎'".as_ptr());
@@ -122,8 +133,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_exceptions() {
+    #[cfg_attr(not(target_os = "unknown"), test)]
+    pub fn test_exceptions() {
         unsafe {
             let state = luaL_newstate();
             assert!(!state.is_null());

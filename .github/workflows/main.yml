@@ -18,7 +18,9 @@ jobs:
         - x86_64-pc-windows-gnu
         - x86_64-pc-windows-msvc
         - wasm32-unknown-emscripten
+        - wasm32-unknown-unknown
         - wasm32-wasip2
+        - wasm32-wasip3
         include:
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-latest
@@ -38,13 +40,19 @@ jobs:
           os: windows-latest
         - target: wasm32-unknown-emscripten
           os: ubuntu-latest
+        - target: wasm32-unknown-unknown
+          os: ubuntu-latest
         - target: wasm32-wasip2
           os: ubuntu-latest
+        - target: wasm32-wasip3
+          os: ubuntu-latest
+          toolchain: nightly
     steps:
     - uses: actions/checkout@main
     - uses: ./.github/actions/setup-deps
       with:
         target: ${{ matrix.target }}
+        toolchain: ${{ matrix.toolchain || 'stable' }}
     - name: Build ${{ matrix.lua }}
       run: |
         cargo build --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }} --target ${{ matrix.target }}
@@ -63,7 +71,9 @@ jobs:
         - aarch64-apple-darwin
         - x86_64-pc-windows-msvc
         - wasm32-unknown-emscripten
+        - wasm32-unknown-unknown
         - wasm32-wasip2
+        - wasm32-wasip3
         include:
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-latest
@@ -75,16 +85,29 @@ jobs:
           os: windows-latest
         - target: wasm32-unknown-emscripten
           os: ubuntu-latest
+        - target: wasm32-unknown-unknown
+          os: ubuntu-latest
         - target: wasm32-wasip2
           os: ubuntu-latest
+        - target: wasm32-wasip3
+          os: ubuntu-latest
+          toolchain: nightly
     steps:
     - uses: actions/checkout@main
     - uses: ./.github/actions/setup-deps
       with:
         target: ${{ matrix.target }}
+        toolchain: ${{ matrix.toolchain || 'stable' }}
     - name: Run ${{ matrix.lua }} tests
+      if: ${{ matrix.target != 'wasm32-unknown-unknown' }}
       run: |
         cargo test --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }} --target ${{ matrix.target }}
+      shell: bash
+    - name: Run ${{ matrix.lua }} tests on wasm32-unknown-unknown
+      if: ${{ matrix.target == 'wasm32-unknown-unknown' }}
+      run: |
+        cargo rustc --manifest-path testcrate/Cargo.toml --release --features ${{ matrix.lua }} --target ${{ matrix.target }} --lib --crate-type cdylib
+        wasmtime run -W exceptions --invoke run_tests target/wasm32-unknown-unknown/release/testcrate.wasm
       shell: bash
 
   test_standalone:
@@ -105,6 +128,7 @@ jobs:
     - uses: ./.github/actions/setup-deps
       with:
         target: ${{ matrix.target }}
+        toolchain: ${{ matrix.toolchain || 'stable' }}
     - name: Run standalone tests
       run: |
         cargo test
