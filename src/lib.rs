@@ -314,12 +314,17 @@ trait AddFilesByExt {
 
 impl AddFilesByExt for cc::Build {
     fn add_files_by_ext(&mut self, dir: &Path, ext: &str) -> Result<&mut Self, Box<dyn Error>> {
-        for entry in fs::read_dir(dir)
+        let mut files = fs::read_dir(dir)
             .context(|| format!("Cannot read '{}'", dir.display()))?
             .filter_map(|e| e.ok())
-            .filter(|e| e.path().extension() == Some(ext.as_ref()))
-        {
-            self.file(entry.path());
+            .map(|e| e.path())
+            .filter(|p| p.extension() == Some(ext.as_ref()))
+            .collect::<Vec<_>>();
+        // `read_dir` order depends on the file system (on ext4, a per-volume hash),
+        // so sort to make the archive, and binaries linking it, reproducible
+        files.sort();
+        for file in files {
+            self.file(file);
         }
         Ok(self)
     }
