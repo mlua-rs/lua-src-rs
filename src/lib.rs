@@ -313,14 +313,24 @@ trait AddFilesByExt {
 }
 
 impl AddFilesByExt for cc::Build {
+    // It's important to keep the order of the files to get consistent builds between machines
+    // if the order is not always the same, the final binary produces a different SHA256 which
+    // might cause issues if one needs to verify which binary is being executed
     fn add_files_by_ext(&mut self, dir: &Path, ext: &str) -> Result<&mut Self, Box<dyn Error>> {
-        for entry in fs::read_dir(dir)
+        let mut sources: Vec<_> = fs::read_dir(dir)
             .context(|| format!("Cannot read '{}'", dir.display()))?
             .filter_map(|e| e.ok())
-            .filter(|e| e.path().extension() == Some(ext.as_ref()))
-        {
-            self.file(entry.path());
+            .map(|e| e.path())
+            .filter(|e| e.extension() == Some(ext.as_ref()))
+            .collect();
+
+        // Sort for determinism
+        sources.sort();
+
+        for source in sources {
+            self.file(source);
         }
+
         Ok(self)
     }
 }
